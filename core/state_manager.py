@@ -251,13 +251,18 @@ class StateManager:
         
         if key:
             if key in memory:
-                # Increment access count
+                # Increment access count while returning plain content to callers.
                 memory[key]["access_count"] = memory[key].get("access_count", 0) + 1
                 await self.merge_dict(memory_key, memory)
-                return memory[key]
+                record = memory[key]
+                return record.get("content", record)
             return None
-        
-        return memory
+
+        # Return plain content values so agent logic can consume memories directly.
+        return {
+            item_key: item_value.get("content", item_value)
+            for item_key, item_value in memory.items()
+        }
     
     async def forget(self, category: str, key: str) -> bool:
         """Remove a memory"""
