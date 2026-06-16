@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 REAL JOB LINKS + DEMO BONUS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Helvetica Neue', sans-serif;
+        }
+        body {
+            background: #f0f2f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 32px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: white;
+            border-radius: 28px;
+            padding: 16px;
+            text-align: center;
+            flex: 1;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: #10b981;
+        }
+        button {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        button:active { transform: scale(0.96); }
+        .btn-orange { background: #f59e0b; }
+        .btn-orange:hover { background: #d97706; }
+        .job-card {
+            background: #fefefe;
+            border-left: 6px solid #10b981;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .real-link {
+            background: #e6f7e6;
+            padding: 6px 12px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+        .real-link:hover {
+            background: #c8e6c9;
+        }
+        hr { margin: 20px 0; }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 60px;
+            font-weight: 500;
+            z-index: 999;
+        }
+        .badge {
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+        }
+        .warning {
+            background: #fff3e0;
+            border-left: 6px solid #f59e0b;
+            padding: 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 60px;
+            border: 1px solid #ccc;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        textarea { border-radius: 20px; min-height: 72px; resize: vertical; }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 16px;
+            border-radius: 60px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            color: #475569;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .tab-btn.on {
+            background: #0f172a;
+            color: white;
+            border-color: #0f172a;
+        }
+        .tab-panel { display: none; }
+        .tab-panel.on { display: block; }
+        .agent-hero {
+            background: linear-gradient(135deg, #1e3a5f, #0f172a);
+            color: white;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .agent-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,.12);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        .agent-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #94a3b8;
+        }
+        .agent-dot.run { background: #34d399; box-shadow: 0 0 8px #34d399; animation: pulse 1.2s infinite; }
+        @keyframes pulse { 50% { opacity: .5; } }
+        .queue-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 6px solid #3b82f6;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+        .queue-item.done { border-left-color: #10b981; opacity: .85; }
+        .queue-item.rejected { border-left-color: #ef4444; opacity: .6; }
+        .queue-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .btn-ok { background: #10b981; }
+        .btn-ok:hover { background: #059669; }
+        .btn-no { background: #94a3b8; }
+        .btn-all { background: #8b5cf6; width: 100%; margin-top: 8px; }
+        .agent-log {
+            font-size: 12px;
+            color: #64748b;
+            max-height: 160px;
+            overflow-y: auto;
+            background: #f1f5f9;
+            border-radius: 16px;
+            padding: 10px;
+        }
+        .agent-log div { margin-bottom: 4px; }
+        .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+        .pill {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 40px;
+            background: #e2e8f0;
+            color: #334155;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card" style="background: #0f172a; color: white; text-align: center;">
+        <h1>💰 MoneyMaer — Jobs + Agent</h1>
+        <p>Állások, demo bónusz — vagy az <strong>Agent</strong> dolgozik helyetted, te csak OK-ézed hogy átment.</p>
+    </div>
+
+    <div class="tabs">
+        <button type="button" class="tab-btn on" data-tab="jobs" onclick="switchTab('jobs')">🔥 Állások</button>
+        <button type="button" class="tab-btn" data-tab="demo" onclick="switchTab('demo')">🎮 Demo</button>
+        <button type="button" class="tab-btn" data-tab="agent" onclick="switchTab('agent')">🤖 Agent</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat">🎁 DEMO TOTAL<br><span class="stat-number" id="totalEarned">0.00</span> €</div>
+        <div class="stat">⏳ DEMO PENDING<br><span class="stat-number" id="pendingEarned">0.00</span></div>
+        <div class="stat">✅ JÓVÁHAGYVA<br><span class="stat-number" id="approvedCount">0</span></div>
+    </div>
+
+    <!-- TAB: JOBS -->
+    <div class="tab-panel on" id="tab-jobs">
+    <div class="card">
+        <h2>🔥 Real remote jobs – apply and earn real money</h2>
+        <p style="margin: 8px 0 16px;">Each job has a <strong>real application link</strong> (company career page or trusted platform).</p>
+        <div id="jobsList">Loading jobs...</div>
+    </div>
+    </div><!-- /tab-jobs -->
+
+    <!-- TAB: DEMO -->
+    <div class="tab-panel" id="tab-demo">
+    <div class="card">
+        <h3>🎮 Demo zone – just for practice</h3>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0;">
+            <button id="bonusBtn" class="btn-orange" style="flex:1;">🎁 DEMO BONUS (+1-3€)</button>
+            <button id="showWithdrawBtn" style="flex:1; background:#3b82f6;">🏦 DEMO WITHDRAW</button>
+        </div>
+        <div id="bonusTimer" style="font-size: 14px; color: #475569;">Ready!</div>
+    </div>
+
+    <!-- WITHDRAW MODAL (demo) -->
+    <div id="withdrawModal" style="display: none;">
+        <div class="card">
+            <h3>💸 Demo withdrawal</h3>
+            <input type="text" id="paypalOrIban" placeholder="Your PayPal or IBAN (for demo only)">
+            <input type="number" id="withdrawAmount" placeholder="Amount (€)">
+            <button id="confirmWithdrawBtn" style="background:#10b981;">✅ Confirm (demo)</button>
+            <button id="closeModalBtn" style="background:#94a3b8; margin-top: 8px;">Cancel</button>
+            <div class="warning" style="margin-top: 16px;">
+                ⚠️ This is a demo – no real money is sent. To earn real money, click the green "Apply for real" buttons above and complete tasks on those platforms.
+            </div>
+        </div>
+    </div>
+
+    <div id="historyCard" class="card" style="display: none;">
+        <h3>📜 Demo withdrawal history</h3>
+        <div id="historyList"></div>
+    </div>
+
+    <div class="warning">
+        💡 <strong>How to earn real money:</strong><br>
+        1. Click any <strong>“Apply for real”</strong> button – it opens a real job posting.<br>
+        2. Sign up on that platform (e.g., Upwork, Fiverr, Appen, Scale AI).<br>
+        3. Complete tasks, get paid via PayPal or bank transfer.<br>
+        4. The demo bonus and withdraw above are just for fun – they don't send real money.
+    </div>
+    </div><!-- /tab-demo -->
+
+    <!-- TAB: AGENT -->
+    <div class="tab-panel" id="tab-agent">
+        <div class="agent-hero">
+            <h2 style="margin-bottom:8px">🤖 Agent — dolgozik helyetted</h2>
+            <p style="font-size:14px; opacity:.9">Figyeli az állásokat, demo bónuszt, kifizetést. A végén neked csak annyi: <strong>OK, átment</strong>.</p>
+            <div class="agent-status">
+                <span class="agent-dot" id="agentDot"></span>
+                <span id="agentStatusText">Agent kikapcsolva</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>⚙️ Beállítások</h3>
+            <label style="font-size:13px;font-weight:600">PayPal / IBAN (agent ezt használja kifizetésnél)</label>
+            <input type="text" id="agentPayout" placeholder="email@paypal.com vagy IBAN">
+            <label style="font-size:13px;font-weight:600">Kulcsszavak (mely állásokat válassza)</label>
+            <input type="text" id="agentKeywords" placeholder="AI, remote, data, engineer…">
+            <div class="pill-row">
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input type="checkbox" id="agentAutoBonus" checked style="width:auto;margin:0"> Auto demo bónusz
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input type="checkbox" id="agentAutoJobs" checked style="width:auto;margin:0"> Állás-jelölések
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input type="checkbox" id="agentAutoWithdraw" style="width:auto;margin:0"> Auto kifizetés javaslat
+                </label>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button type="button" id="agentStartBtn" style="flex:1;background:#10b981">▶ Agent indítása</button>
+                <button type="button" id="agentStopBtn" style="flex:1;background:#64748b;display:none">⏹ Leállítás</button>
+                <button type="button" id="agentRunOnceBtn" style="flex:1;background:#3b82f6">⚡ Egyszer futtat</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="flex-between">
+                <h3>✅ Jóváhagyás — csak OK, hogy átment</h3>
+                <span class="badge" id="queueCount">0 várakozik</span>
+            </div>
+            <p style="font-size:13px;color:#64748b;margin:8px 0 12px">Az agent elvégezte / javasolta. Ha rendben, nyomj <strong>OK, átment</strong> — akkor végrehajtódik (bónusz, link, kifizetés).</p>
+            <div id="approvalQueue">
+                <div style="text-align:center;color:#94a3b8;padding:24px">Nincs várakozó tétel. Indítsd az agentet vagy „Egyszer futtat”.</div>
+            </div>
+            <button type="button" class="btn-all" id="approveAllBtn" style="display:none">✅ Összes OK — átment</button>
+        </div>
+
+        <div class="card">
+            <h3>📋 Agent napló</h3>
+            <div class="agent-log" id="agentLog"></div>
+        </div>
+    </div><!-- /tab-agent -->
+
+</div>
+
+<div id="toastMsg" class="toast" style="display: none;"></div>
+
+<script>
+    // ---------- FETCH REAL JOBS FROM REMOTIVE API (with direct links) ----------
+    let jobs = [];
+    async function fetchJobs() {
+        try {
+            const res = await fetch('https://remotive.com/api/remote-jobs');
+            const data = await res.json();
+            if (data.jobs) {
+                jobs = data.jobs.slice(0, 15).map(job => ({
+                    id: job.id,
+                    title: job.title,
+                    company: job.company_name,
+                    salary: job.salary || "Competitive",
+                    url: job.url  // real application link
+                }));
+            } else throw new Error();
+        } catch(e) {
+            // fallback jobs with real links to known platforms
+            jobs = [
+                { id: 1, title: "AI Data Labeler", company: "Scale AI", salary: "$20-35/hr", url: "https://scale.com/careers" },
+                { id: 2, title: "Prompt Engineer", company: "Anthropic", salary: "$40-70/hr", url: "https://anthropic.com/careers" },
+                { id: 3, title: "Freelance Writing", company: "Upwork", salary: "varies", url: "https://www.upwork.com/nx/find-work/" },
+                { id: 4, title: "Micro Tasks", company: "Appen", salary: "$10-20/hr", url: "https://appen.com/join-our-crowd" }
+            ];
+        }
+        renderJobs();
+    }
+
+    function renderJobs() {
+        const container = document.getElementById("jobsList");
+        if (!container) return;
+        container.innerHTML = jobs.map(job => `
+            <div class="job-card">
+                <div class="flex-between">
+                    <div>
+                        <strong>${job.title}</strong><br>
+                        <span style="font-size: 14px;">${job.company} · ${job.salary}</span>
+                    </div>
+                    <a href="${job.url}" target="_blank" class="real-link">✅ Apply for real →</a>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    // ---------- TABS ----------
+    function switchTab(name) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('on', p.id === 'tab-' + name));
+        if (name === 'agent') renderApprovalQueue();
+    }
+
+    // ---------- DEMO STATE (for bonus & withdraw – no real money) ----------
+    let demoEarnings = { total: 0, pending: 0 };
+    let demoHistory = [];
+    let lastBonusTime = 0;
+    let approvedTotal = 0;
+    let appliedJobIds = new Set();
+
+    // ---------- AGENT ----------
+    let agentRunning = false;
+    let agentInterval = null;
+    let approvalQueue = [];
+    let agentLogs = [];
+
+    const AGENT_STORE = {
+        queue: 'mm_agent_queue',
+        logs: 'mm_agent_logs',
+        settings: 'mm_agent_settings',
+        applied: 'mm_applied_jobs',
+        approved: 'mm_approved_count',
+    };
+
+    function loadAgentData() {
+        try {
+            const q = localStorage.getItem(AGENT_STORE.queue);
+            if (q) approvalQueue = JSON.parse(q);
+            const l = localStorage.getItem(AGENT_STORE.logs);
+            if (l) agentLogs = JSON.parse(l).slice(0, 80);
+            const a = localStorage.getItem(AGENT_STORE.applied);
+            if (a) appliedJobIds = new Set(JSON.parse(a));
+            const c = localStorage.getItem(AGENT_STORE.approved);
+            if (c) approvedTotal = parseInt(c, 10) || 0;
+            const s = localStorage.getItem(AGENT_STORE.settings);
+            if (s) {
+                const st = JSON.parse(s);
+                if (st.payout) document.getElementById('agentPayout').value = st.payout;
+                if (st.keywords) document.getElementById('agentKeywords').value = st.keywords;
+                if (st.autoBonus != null) document.getElementById('agentAutoBonus').checked = st.autoBonus;
+                if (st.autoJobs != null) document.getElementById('agentAutoJobs').checked = st.autoJobs;
+                if (st.autoWithdraw != null) document.getElementById('agentAutoWithdraw').checked = st.autoWithdraw;
+            }
+        } catch (e) {}
+        renderAgentLog();
+        renderApprovalQueue();
+        document.getElementById('approvedCount').innerText = approvedTotal;
+    }
+
+    function saveAgentData() {
+        localStorage.setItem(AGENT_STORE.queue, JSON.stringify(approvalQueue));
+        localStorage.setItem(AGENT_STORE.logs, JSON.stringify(agentLogs.slice(0, 80)));
+        localStorage.setItem(AGENT_STORE.applied, JSON.stringify([...appliedJobIds]));
+        localStorage.setItem(AGENT_STORE.approved, String(approvedTotal));
+        localStorage.setItem(AGENT_STORE.settings, JSON.stringify({
+            payout: document.getElementById('agentPayout').value.trim(),
+            keywords: document.getElementById('agentKeywords').value.trim(),
+            autoBonus: document.getElementById('agentAutoBonus').checked,
+            autoJobs: document.getElementById('agentAutoJobs').checked,
+            autoWithdraw: document.getElementById('agentAutoWithdraw').checked,
+        }));
+    }
+
+    function agentLog(msg) {
+        const line = new Date().toLocaleTimeString() + ' — ' + msg;
+        agentLogs.unshift(line);
+        agentLogs = agentLogs.slice(0, 80);
+        renderAgentLog();
+        saveAgentData();
+    }
+
+    function renderAgentLog() {
+        const el = document.getElementById('agentLog');
+        if (!el) return;
+        el.innerHTML = agentLogs.length
+            ? agentLogs.map(l => '<div>' + l + '</div>').join('')
+            : '<div>Még nincs napló.</div>';
+    }
+
+    function queueAction(item) {
+        const dup = approvalQueue.some(
+            x => x.status === 'pending' && x.type === item.type && x.refId === item.refId
+        );
+        if (dup) return;
+        approvalQueue.unshift({
+            id: Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+            status: 'pending',
+            created: new Date().toISOString(),
+            ...item,
+        });
+        saveAgentData();
+        renderApprovalQueue();
+        showToast('🤖 Agent: jóváhagyásra vár — ' + item.title, false);
+    }
+
+    function renderApprovalQueue() {
+        const box = document.getElementById('approvalQueue');
+        const cnt = document.getElementById('queueCount');
+        const allBtn = document.getElementById('approveAllBtn');
+        if (!box) return;
+        const pending = approvalQueue.filter(x => x.status === 'pending');
+        if (cnt) cnt.textContent = pending.length + ' várakozik';
+        if (allBtn) allBtn.style.display = pending.length > 1 ? 'block' : 'none';
+
+        if (!approvalQueue.length) {
+            box.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px">Nincs tétel.</div>';
+            return;
+        }
+
+        box.innerHTML = approvalQueue.map(item => {
+            const cls = item.status === 'pending' ? '' : item.status === 'approved' ? ' done' : ' rejected';
+            const btns = item.status === 'pending'
+                ? `<div class="queue-actions">
+                    <button type="button" class="btn-ok" onclick="approveItem('${item.id}')">✅ OK, átment</button>
+                    <button type="button" class="btn-no" onclick="rejectItem('${item.id}')">❌ Nem</button>
+                   </div>`
+                : `<div style="font-size:12px;color:#64748b;margin-top:6px">${item.status === 'approved' ? '✅ Jóváhagyva' : '❌ Elutasítva'}</div>`;
+            return `<div class="queue-item${cls}">
+                <strong>${item.title}</strong>
+                <div style="font-size:13px;color:#475569;margin-top:4px">${item.detail || ''}</div>
+                ${btns}
+            </div>`;
+        }).join('');
+    }
+
+    function approveItem(id) {
+        const item = approvalQueue.find(x => x.id === id);
+        if (!item || item.status !== 'pending') return;
+
+        if (item.type === 'bonus') {
+            const bonus = item.amount || parseFloat((Math.random() * 3 + 1).toFixed(2));
+            demoEarnings.total += bonus;
+            demoEarnings.pending += bonus;
+            lastBonusTime = Date.now();
+            updateDemoUI();
+            agentLog('OK: demo bónusz +€' + bonus.toFixed(2));
+        } else if (item.type === 'job') {
+            appliedJobIds.add(String(item.refId));
+            if (item.url) window.open(item.url, '_blank');
+            agentLog('OK: jelentkezés — ' + item.jobTitle);
+        } else if (item.type === 'withdraw') {
+            const payout = document.getElementById('agentPayout').value.trim() || item.payout;
+            if (demoWithdraw(payout, item.amount)) {
+                agentLog('OK: demo kifizetés €' + item.amount);
+            } else {
+                showToast('Kifizetés sikertelen — ellenőrizd az összeget', true);
+                return;
+            }
+        }
+
+        item.status = 'approved';
+        approvedTotal++;
+        document.getElementById('approvedCount').innerText = approvedTotal;
+        saveAgentData();
+        updateDemoUI();
+        renderApprovalQueue();
+        showToast('✅ OK, átment — végrehajtva', false);
+    }
+
+    function rejectItem(id) {
+        const item = approvalQueue.find(x => x.id === id);
+        if (!item) return;
+        item.status = 'rejected';
+        saveAgentData();
+        renderApprovalQueue();
+        agentLog('Elutasítva: ' + item.title);
+    }
+
+    function approveAllPending() {
+        const ids = approvalQueue.filter(x => x.status === 'pending').map(x => x.id);
+        ids.forEach(id => approveItem(id));
+        showToast('✅ ' + ids.length + ' tétel átment', false);
+    }
+
+    function jobMatchesKeywords(job) {
+        const kw = (document.getElementById('agentKeywords').value || '').toLowerCase().split(/[,;\s]+/).filter(Boolean);
+        if (!kw.length) return true;
+        const hay = (job.title + ' ' + job.company + ' ' + job.salary).toLowerCase();
+        return kw.some(k => hay.includes(k));
+    }
+
+    function agentTick() {
+        if (!jobs.length) return;
+
+        if (document.getElementById('agentAutoJobs').checked) {
+            const candidates = jobs.filter(j => !appliedJobIds.has(String(j.id)) && jobMatchesKeywords(j));
+            if (candidates.length) {
+                const job = candidates[0];
+                queueAction({
+                    type: 'job',
+                    refId: job.id,
+                    jobTitle: job.title,
+                    url: job.url,
+                    title: '📋 Jelentkezés: ' + job.title,
+                    detail: job.company + ' · ' + job.salary + ' — OK után megnyílik a link.',
+                });
+                agentLog('Javaslat: ' + job.title + ' @ ' + job.company);
+            }
+        }
+
+        if (document.getElementById('agentAutoBonus').checked) {
+            const now = Date.now();
+            if (!lastBonusTime || (now - lastBonusTime) >= 30000) {
+                const bonus = parseFloat((Math.random() * 3 + 1).toFixed(2));
+                queueAction({
+                    type: 'bonus',
+                    refId: 'bonus_' + now,
+                    amount: bonus,
+                    title: '🎁 Demo bónusz kész',
+                    detail: '+€' + bonus.toFixed(2) + ' — OK, átment után jóváíródik.',
+                });
+                agentLog('Demo bónusz vár jóváhagyásra: €' + bonus.toFixed(2));
+            }
+        }
+
+        if (document.getElementById('agentAutoWithdraw').checked && demoEarnings.pending >= 5) {
+            const payout = document.getElementById('agentPayout').value.trim();
+            if (payout) {
+                const amount = Math.min(demoEarnings.pending, parseFloat((demoEarnings.pending * 0.5).toFixed(2)));
+                if (amount >= 1) {
+                    queueAction({
+                        type: 'withdraw',
+                        refId: 'wd_' + Date.now(),
+                        amount,
+                        payout,
+                        title: '💸 Kifizetés javaslat',
+                        detail: '€' + amount.toFixed(2) + ' → ' + payout + ' (demo)',
+                    });
+                    agentLog('Kifizetés javaslat: €' + amount.toFixed(2));
+                }
+            }
+        }
+
+        saveAgentData();
+    }
+
+    function setAgentUi(running) {
+        agentRunning = running;
+        document.getElementById('agentDot').classList.toggle('run', running);
+        document.getElementById('agentStatusText').textContent = running
+            ? 'Agent fut — te csak OK-ézed'
+            : 'Agent kikapcsolva';
+        document.getElementById('agentStartBtn').style.display = running ? 'none' : 'block';
+        document.getElementById('agentStopBtn').style.display = running ? 'block' : 'none';
+    }
+
+    function startAgent() {
+        if (agentInterval) clearInterval(agentInterval);
+        setAgentUi(true);
+        agentLog('Agent elindult');
+        agentTick();
+        agentInterval = setInterval(agentTick, 45000);
+        switchTab('agent');
+    }
+
+    function stopAgent() {
+        if (agentInterval) clearInterval(agentInterval);
+        agentInterval = null;
+        setAgentUi(false);
+        agentLog('Agent leállítva');
+    }
+
+    function loadDemoData() {
+        try {
+            const saved = localStorage.getItem("demo_earnings");
+            if (saved) demoEarnings = JSON.parse(saved);
+            const savedHist = localStorage.getItem("demo_history");
+            if (savedHist) demoHistory = JSON.parse(savedHist);
+            const savedBonus = localStorage.getItem("demo_bonus_time");
+            if (savedBonus) lastBonusTime = parseInt(savedBonus);
+        } catch(e) {}
+        updateDemoUI();
+    }
+    function saveDemoData() {
+        localStorage.setItem("demo_earnings", JSON.stringify(demoEarnings));
+        localStorage.setItem("demo_history", JSON.stringify(demoHistory));
+        localStorage.setItem("demo_bonus_time", lastBonusTime);
+    }
+
+    function updateDemoUI() {
+        document.getElementById("totalEarned").innerText = demoEarnings.total.toFixed(2);
+        document.getElementById("pendingEarned").innerText = demoEarnings.pending.toFixed(2);
+        renderDemoHistory();
+        saveDemoData();
+    }
+
+    function renderDemoHistory() {
+        const container = document.getElementById("historyList");
+        const historyCard = document.getElementById("historyCard");
+        if (!container) return;
+        if (demoHistory.length === 0) {
+            historyCard.style.display = "none";
+            return;
+        }
+        historyCard.style.display = "block";
+        container.innerHTML = demoHistory.map(tx => `
+            <div style="background:#f8fafc; border-radius: 16px; padding: 12px; margin-bottom: 8px;">
+                💶 €${tx.amount} → ${tx.method} (${tx.destination}) · ${tx.date}
+            </div>
+        `).join("");
+    }
+
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById("toastMsg");
+        toast.textContent = msg;
+        toast.style.display = "block";
+        toast.style.background = isError ? "#dc2626" : "#0f172a";
+        setTimeout(() => toast.style.display = "none", 3500);
+    }
+
+    // DEMO BONUS (adds fake balance)
+    function claimDemoBonus() {
+        const now = Date.now();
+        if (lastBonusTime && (now - lastBonusTime) < 30000) {
+            const secLeft = Math.ceil((30000 - (now - lastBonusTime)) / 1000);
+            showToast(`⏳ Demo bonus in ${secLeft}s`, true);
+            document.getElementById("bonusTimer").innerHTML = `Next demo bonus in ${secLeft}s`;
+            return;
+        }
+        const bonus = parseFloat((Math.random() * 3 + 1).toFixed(2));
+        demoEarnings.total += bonus;
+        demoEarnings.pending += bonus;
+        lastBonusTime = now;
+        updateDemoUI();
+        showToast(`🎁 DEMO BONUS: +€${bonus} (not real money)`, false);
+        document.getElementById("bonusTimer").innerHTML = "✅ Claimed! Wait 30s";
+        setTimeout(() => {
+            document.getElementById("bonusTimer").innerHTML = "✨ Ready to claim!";
+        }, 30000);
+    }
+
+    // DEMO WITHDRAW (does nothing real)
+    function demoWithdraw(paypalOrIban, amount) {
+        if (!paypalOrIban || amount <= 0) {
+            showToast("Enter a valid PayPal/IBAN and amount", true);
+            return false;
+        }
+        if (amount > demoEarnings.pending) {
+            showToast(`Demo balance only €${demoEarnings.pending.toFixed(2)} pending`, true);
+            return false;
+        }
+        demoEarnings.pending -= amount;
+        demoEarnings.total -= amount;
+        const method = paypalOrIban.includes("@") ? "PayPal (demo)" : "IBAN (demo)";
+        const destination = method.includes("PayPal") ? paypalOrIban : `****${paypalOrIban.slice(-4)}`;
+        demoHistory.unshift({
+            id: Date.now(),
+            amount: amount,
+            method: method,
+            destination: destination,
+            date: new Date().toLocaleString()
+        });
+        updateDemoUI();
+        showToast(`✅ DEMO: €${amount} would be sent to ${method} – no real money transferred.`, false);
+        return true;
+    }
+
+    // Modal handling
+    const modal = document.getElementById("withdrawModal");
+    document.getElementById("showWithdrawBtn").onclick = () => modal.style.display = "block";
+    document.getElementById("closeModalBtn").onclick = () => modal.style.display = "none";
+    document.getElementById("confirmWithdrawBtn").onclick = () => {
+        const paypalOrIban = document.getElementById("paypalOrIban").value.trim();
+        const amount = parseFloat(document.getElementById("withdrawAmount").value);
+        if (demoWithdraw(paypalOrIban, amount)) {
+            modal.style.display = "none";
+            document.getElementById("paypalOrIban").value = "";
+            document.getElementById("withdrawAmount").value = "";
+        }
+    };
+
+    // Initialize
+    fetchJobs().then(() => {
+        loadDemoData();
+        loadAgentData();
+    });
+    document.getElementById("bonusBtn").onclick = claimDemoBonus;
+    document.getElementById("agentStartBtn").onclick = startAgent;
+    document.getElementById("agentStopBtn").onclick = stopAgent;
+    document.getElementById("agentRunOnceBtn").onclick = () => { agentTick(); switchTab('agent'); };
+    document.getElementById("approveAllBtn").onclick = approveAllPending;
+    ['agentPayout', 'agentKeywords'].forEach(id => {
+        document.getElementById(id).addEventListener('change', saveAgentData);
+    });
+</script>
+</body>
+</html>
