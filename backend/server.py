@@ -291,6 +291,16 @@ async def list_issues(status: str = None, severity: str = None):
     return result
 
 
+@app.get("/api/issues/analysis")
+async def analyze_issues():
+    """Analyze all issues for patterns"""
+    result = await agent_registry.call_agent(
+        "issue_agent",
+        "analyze_issues"
+    )
+    return result
+
+
 @app.get("/api/issues/{issue_id}")
 async def get_issue(issue_id: str):
     """Get specific issue details"""
@@ -298,16 +308,6 @@ async def get_issue(issue_id: str):
         "issue_agent",
         "get_issue",
         issue_id=issue_id
-    )
-    return result
-
-
-@app.get("/api/issues/analysis")
-async def analyze_issues():
-    """Analyze all issues for patterns"""
-    result = await agent_registry.call_agent(
-        "issue_agent",
-        "analyze_issues"
     )
     return result
 
@@ -454,6 +454,7 @@ async def root():
         "description": "Unified AI Application with Memory, Issue Tracking, and Auto-Fixing",
         "version": "1.0.0",
         "docs": "/docs",
+        "main_menu": "http://127.0.0.1:8765/index.html",
         "endpoints": {
             "health": "/api/health",
             "status": "/api/status",

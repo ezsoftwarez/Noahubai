@@ -14,7 +14,9 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+from urllib.error import URLError
 from urllib.parse import parse_qs, urlparse
+from urllib.request import urlopen
 
 def _resolve_root() -> Path:
     if getattr(sys, "frozen", False):
@@ -27,6 +29,7 @@ BRIDGE_DIR = ROOT / "bridge-data"
 OUTBOX_DIR = BRIDGE_DIR / "outbox"
 CURSOR_PROJECTS = Path.home() / ".cursor" / "projects"
 WORKSPACE = ROOT
+API_URL = os.environ.get("NOAHUBAI_API_URL", "http://127.0.0.1:8000").rstrip("/")
 SESSION_LIST_TTL = 45.0
 _session_list_cache: dict[str, Any] = {"ts": 0.0, "data": []}
 _linked_project_cache: dict[str, Any] = {"ts": 0.0, "path": None}
@@ -134,6 +137,29 @@ def json_response(handler: SimpleHTTPRequestHandler, data: Any, status: int = 20
     handler.send_header("Content-Length", str(len(body)))
     handler.end_headers()
     handler.wfile.write(body)
+
+
+def fetch_backend_summary() -> dict[str, Any]:
+    """Return lightweight Noahubai core status when the API is available."""
+    summary: dict[str, Any] = {"ok": False, "url": API_URL}
+    try:
+        with urlopen(f"{API_URL}/api/health", timeout=1.5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (OSError, URLError, json.JSONDecodeError):
+        return summary
+
+    agents = payload.get("agents", {}) if isinstance(payload, dict) else {}
+    system = payload.get("system", {}) if isinstance(payload, dict) else {}
+    summary.update(
+        {
+            "ok": True,
+            "status": payload.get("status", "unknown"),
+            "healthyAgents": system.get("healthy_agents", 0),
+            "totalAgents": system.get("total_agents", len(agents)),
+            "agentNames": sorted(agents.keys()),
+        }
+    )
+    return summary
 
 
 def read_body(handler: SimpleHTTPRequestHandler) -> dict[str, Any]:
@@ -446,6 +472,7 @@ class HubHandler(SimpleHTTPRequestHandler):
                 "linkedProject": proj.name if proj else None,
                 "linkedProjectPath": str(proj) if proj else None,
                 "outboxFile": str(OUTBOX_DIR / "cursor-inbox.md"),
+                "backend": fetch_backend_summary(),
             })
 
         if path == "/api/bridge/cursor/sessions":
@@ -543,12 +570,14 @@ class HubHandler(SimpleHTTPRequestHandler):
 
 def main() -> None:
     ensure_dirs()
+    host = os.environ.get("AIHUB_HOST", "127.0.0.1")
     port = int(os.environ.get("AIHUB_PORT", "8765"))
-    server = ThreadingHTTPServer(("127.0.0.1", port), HubHandler)
-    print(f"AI Hub Bridge: http://127.0.0.1:{port}/index.html")
+    server = ThreadingHTTPServer((host, port), HubHandler)
+    print(f"AI Hub Bridge: http://{host}:{port}/index.html")
     print(f"Cursor transcripts: {CURSOR_PROJECTS}")
     print(f"Outbox (paste into Cursor): {OUTBOX_DIR / 'cursor-inbox.md'}")
     print(f"Pinned codes folder: {DEFAULT_PINNED_CODES_DIR}")
+    print(f"Noahubai API: {API_URL}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
