@@ -1,0 +1,692 @@
+<!--
+SAVE AS:
+overdon.html
+
+THEN OPEN IN BROWSER.
+WORKING VERSION.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>OverDOn Runtime</title>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap');
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Inter',sans-serif;
+}
+
+body{
+overflow:hidden;
+background:#050505;
+color:white;
+}
+
+canvas{
+position:fixed;
+inset:0;
+z-index:0;
+}
+
+.app{
+position:relative;
+z-index:2;
+display:flex;
+width:100vw;
+height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:105px;
+background:rgba(10,10,10,.94);
+border-right:1px solid rgba(255,255,255,.05);
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:18px 0;
+gap:16px;
+}
+
+.logo{
+width:68px;
+height:68px;
+border-radius:24px;
+background:linear-gradient(135deg,#00ffee,#7367ff);
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:32px;
+font-weight:900;
+color:black;
+box-shadow:
+0 0 40px rgba(0,255,238,.28);
+}
+
+.sidebtn{
+width:72px;
+height:72px;
+border-radius:22px;
+background:rgba(255,255,255,.03);
+border:1px solid rgba(255,255,255,.06);
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:4px;
+font-size:12px;
+cursor:pointer;
+transition:.3s;
+}
+
+.sidebtn:hover{
+transform:translateY(-4px);
+border-color:#00ffee;
+box-shadow:
+0 0 35px rgba(0,255,238,.15);
+}
+
+.sidebtn span{
+font-size:20px;
+}
+
+/* MAIN */
+
+.main{
+flex:1;
+display:flex;
+flex-direction:column;
+padding:18px;
+gap:18px;
+overflow:hidden;
+}
+
+/* TOPBAR */
+
+.topbar{
+height:88px;
+border-radius:28px;
+background:rgba(15,15,15,.84);
+border:1px solid rgba(255,255,255,.06);
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 26px;
+}
+
+.title h1{
+font-size:30px;
+font-weight:800;
+}
+
+.title p{
+font-size:12px;
+opacity:.6;
+}
+
+.search{
+width:420px;
+height:52px;
+border-radius:18px;
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.06);
+padding:0 18px;
+color:white;
+outline:none;
+font-size:14px;
+}
+
+.search:focus{
+border-color:#00ffee;
+}
+
+/* CONTENT */
+
+.content{
+flex:1;
+display:grid;
+grid-template-columns:1.7fr 1fr;
+gap:18px;
+overflow:hidden;
+}
+
+/* PANEL */
+
+.panel{
+background:rgba(15,15,15,.84);
+border:1px solid rgba(255,255,255,.06);
+border-radius:30px;
+overflow:hidden;
+backdrop-filter:blur(20px);
+}
+
+/* PROJECTS */
+
+.projects{
+padding:22px;
+overflow:auto;
+}
+
+.section{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.section h2{
+font-size:24px;
+}
+
+.toggle{
+padding:12px 18px;
+border-radius:16px;
+background:rgba(0,255,238,.08);
+border:1px solid rgba(0,255,238,.15);
+font-size:12px;
+}
+
+.projectGrid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+gap:16px;
+}
+
+.project{
+min-height:180px;
+border-radius:26px;
+background:rgba(255,255,255,.03);
+border:1px solid rgba(255,255,255,.06);
+padding:22px;
+position:relative;
+overflow:hidden;
+transition:.3s;
+cursor:pointer;
+}
+
+.project:hover{
+transform:translateY(-6px);
+border-color:#00ffee;
+box-shadow:
+0 0 40px rgba(0,255,238,.12);
+}
+
+.project::before{
+content:'';
+position:absolute;
+width:160%;
+height:160%;
+background:
+radial-gradient(circle,#00ffee22,transparent 60%);
+top:-80%;
+left:-40%;
+}
+
+.project h3{
+font-size:24px;
+margin-bottom:10px;
+position:relative;
+z-index:2;
+}
+
+.project p{
+font-size:13px;
+line-height:1.5;
+opacity:.72;
+position:relative;
+z-index:2;
+}
+
+.meta{
+position:absolute;
+bottom:18px;
+left:22px;
+font-size:12px;
+color:#00ffee;
+z-index:2;
+}
+
+/* RIGHT */
+
+.right{
+display:flex;
+flex-direction:column;
+gap:18px;
+overflow:hidden;
+}
+
+/* AGENTS */
+
+.agents{
+padding:22px;
+overflow:auto;
+}
+
+.agent{
+border-radius:24px;
+background:rgba(255,255,255,.03);
+border:1px solid rgba(255,255,255,.06);
+padding:18px;
+margin-bottom:14px;
+transition:.3s;
+}
+
+.agent:hover{
+transform:translateX(6px);
+border-color:#7367ff;
+}
+
+.agent h3{
+font-size:18px;
+margin-bottom:8px;
+}
+
+.agent p{
+font-size:12px;
+line-height:1.5;
+opacity:.72;
+}
+
+/* PROFILE */
+
+.profile{
+border-radius:24px;
+background:rgba(255,255,255,.03);
+border:1px solid rgba(255,255,255,.06);
+padding:18px;
+margin-top:18px;
+}
+
+.profile h3{
+margin-bottom:14px;
+}
+
+.checks{
+display:flex;
+flex-direction:column;
+gap:8px;
+font-size:13px;
+}
+
+.checks label{
+display:flex;
+gap:10px;
+align-items:center;
+}
+
+/* CODES */
+
+.codes{
+padding:22px;
+overflow:auto;
+}
+
+.codeGrid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+}
+
+.cube{
+aspect-ratio:1/1;
+border-radius:22px;
+background:
+linear-gradient(
+135deg,
+rgba(255,255,255,.08),
+rgba(255,255,255,.02)
+);
+
+border:1px solid rgba(255,255,255,.06);
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+font-size:22px;
+font-weight:800;
+
+cursor:pointer;
+transition:.3s;
+}
+
+.cube:hover{
+transform:
+perspective(800px)
+rotateX(10deg)
+rotateY(-10deg)
+scale(1.05);
+
+border-color:#00ffee;
+
+box-shadow:
+0 0 35px rgba(0,255,238,.16);
+}
+
+/* STATUS */
+
+.status{
+position:fixed;
+right:24px;
+bottom:24px;
+width:340px;
+padding:18px;
+border-radius:24px;
+background:rgba(10,10,10,.9);
+border:1px solid rgba(255,255,255,.06);
+z-index:50;
+}
+
+.status h3{
+margin-bottom:10px;
+}
+
+.status p{
+font-size:13px;
+line-height:1.5;
+opacity:.74;
+}
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar{
+width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+background:#1c1c1c;
+border-radius:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="app">
+
+<div class="sidebar">
+
+<div class="logo">O</div>
+
+<div class="sidebtn"><span>💬</span>Chats</div>
+<div class="sidebtn"><span>📁</span>Groups</div>
+<div class="sidebtn"><span>📌</span>Pins</div>
+<div class="sidebtn"><span>🤖</span>Agents</div>
+<div class="sidebtn"><span>🧊</span>Codes</div>
+<div class="sidebtn"><span>🏗</span>Build</div>
+<div class="sidebtn"><span>🎯</span>Vision</div>
+
+</div>
+
+<div class="main">
+
+<div class="topbar">
+
+<div class="title">
+<h1>OverDOn</h1>
+<p>ODOAgents Neural Workspace</p>
+</div>
+
+<input class="search" placeholder="Search projects, code, memory, agents...">
+
+</div>
+
+<div class="content">
+
+<!-- LEFT -->
+
+<div class="panel projects">
+
+<div class="section">
+<h2>Build Chats</h2>
+<div class="toggle">PROJECT MODE ENABLED</div>
+</div>
+
+<div class="projectGrid">
+
+<div class="project">
+<h3>BeeBox</h3>
+<p>
+make cinematic bee selling website with alive particles and deep parallax...
+</p>
+<div class="meta">
+GPT + Gemini + DeepSeek
+</div>
+</div>
+
+<div class="project">
+<h3>AI Hub</h3>
+<p>
+merge provider histories and unify memory systems...
+</p>
+<div class="meta">
+Multi Provider
+</div>
+</div>
+
+<div class="project">
+<h3>ODOAgents</h3>
+<p>
+autonomous coding and routing environment...
+</p>
+<div class="meta">
+Claude + GPT
+</div>
+</div>
+
+<div class="project">
+<h3>Bitmap Engine</h3>
+<p>
+smooth gif rendering and cinematic visual effects...
+</p>
+<div class="meta">
+GPT + DS
+</div>
+</div>
+
+</div>
+
+</div>
+
+<!-- RIGHT -->
+
+<div class="right">
+
+<div class="panel agents">
+
+<div class="section">
+<h2>ODOAgents</h2>
+</div>
+
+<div class="agent">
+<h3>ODOCoder</h3>
+<p>
+Task: Coding<br>
+Uses: GPT + DeepSeek + Claude<br>
+Priority: Accuracy + optimization
+</p>
+</div>
+
+<div class="agent">
+<h3>ODOUI</h3>
+<p>
+Task: UI / Visual Systems<br>
+Uses: Gemini + GPT<br>
+Priority: Cinematic polish
+</p>
+</div>
+
+<div class="agent">
+<h3>ODOResearch</h3>
+<p>
+Task: Research / Analysis<br>
+Uses: Claude + Gemini<br>
+Priority: Deep context
+</p>
+</div>
+
+<div class="profile">
+
+<h3>Profiles</h3>
+
+<div class="checks">
+
+<label><input type="checkbox" checked> Enable GPT</label>
+<label><input type="checkbox" checked> Enable Gemini</label>
+<label><input type="checkbox" checked> Enable Claude</label>
+<label><input type="checkbox" checked> Enable DeepSeek</label>
+
+<br>
+
+<label><input type="checkbox" checked> Coding Agents</label>
+<label><input type="checkbox" checked> Research Agents</label>
+<label><input type="checkbox"> Experimental</label>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="panel codes">
+
+<div class="section">
+<h2>ONLY CODES</h2>
+</div>
+
+<div class="codeGrid">
+
+<div class="cube">PY</div>
+<div class="cube">JS</div>
+<div class="cube">CPP</div>
+<div class="cube">WEB</div>
+<div class="cube">AI</div>
+<div class="cube">SYS</div>
+<div class="cube">BOT</div>
+<div class="cube">UI</div>
+<div class="cube">BLDR</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="status">
+
+<h3>Workspace Status</h3>
+
+<p>
+ODOAgents synchronized.<br>
+4 AI providers active.<br>
+Project memory indexed.<br>
+Controller standby active.<br>
+OverDOn operational.
+</p>
+
+</div>
+
+<script>
+
+const canvas=document.getElementById('bg');
+const ctx=canvas.getContext('2d');
+
+let w,h;
+let particles=[];
+
+function resize(){
+
+w=canvas.width=window.innerWidth;
+h=canvas.height=window.innerHeight;
+
+}
+
+window.addEventListener('resize',resize);
+
+resize();
+
+class Particle{
+
+constructor(){
+this.reset();
+}
+
+reset(){
+
+this.x=Math.random()*w;
+this.y=Math.random()*h;
+
+this.r=Math.random()*2+1;
+
+this.vx=(Math.random()-.5)*0.3;
+this.vy=(Math.random()-.5)*0.3;
+
+}
+
+update(){
+
+this.x+=this.vx;
+this.y+=this.vy;
+
+if(this.x<0||this.x>w||this.y<0||this.y>h){
+this.reset();
+}
+
+ctx.beginPath();
+ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+ctx.fillStyle='rgba(0,255,238,.45)';
+ctx.fill();
+
+}
+
+}
+
+for(let i=0;i<120;i++){
+
+particles.push(new Particle());
+
+}
+
+function animate(){
+
+ctx.clearRect(0,0,w,h);
+
+const grad=ctx.createLinearGradient(0,0,w,h);
+
+grad.addColorStop(0,'#050505');
+grad.addColorStop(1,'#0b0b14');
+
+ctx.fillStyle=grad;
+ctx.fillRect(0,0,w,h);
+
+particles.forEach(p=>p.update());
+
+requestAnimationFrame(animate);
+
+}
+
+animate();
+
+</script>
+
+</body>
+</html>

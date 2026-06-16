@@ -1,0 +1,20 @@
+﻿AI Hub — oVerk1LL snapshot
+Saved: 2026-05-20 19:27:01
+Source: c:\Users\krake\OneDrive\Asztali gép\ai hub
+
+Run: RUN-AI-HUB.bat (opens http://127.0.0.1:8765/index.html)
+
+Features in this build:
+- Bridge + Chats + Codes + Pictures tab
+- Per-AI brand chat colors + combined rainbow thread border
+- SUMMARIZE CHAT (toolbar, timeline, projects, thread)
+- Picture generators (Pollinations, DALL-E, local SD, web tools)
+- Cursor import / agent bridge
+
+Single entry: RUN-AI-HUB.bat or Setup\AI HUB.exe (not index.html directly).
+
+Setup folder:
+  Setup.exe   — install / refresh to B:\AI HUB oVerk1LL
+  AI HUB.exe  — standalone launcher (PyInstaller)
+
+Distribution zip: B:\AI HUB v1.zip

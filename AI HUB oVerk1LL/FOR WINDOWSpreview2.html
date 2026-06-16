@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>OverDOn Runtime</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Satoshi',sans-serif;
+}
+
+body{
+overflow:hidden;
+background:#050505;
+color:white;
+}
+
+canvas{
+position:fixed;
+inset:0;
+z-index:0;
+}
+
+.app{
+position:relative;
+z-index:2;
+display:flex;
+width:100vw;
+height:100vh;
+backdrop-filter:blur(10px);
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:110px;
+background:rgba(10,10,10,.9);
+border-right:1px solid rgba(255,255,255,.05);
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:20px 0;
+gap:18px;
+}
+
+.logo{
+width:70px;
+height:70px;
+border-radius:24px;
+background:linear-gradient(135deg,#00ffee,#7367ff);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:34px;
+font-weight:900;
+color:black;
+box-shadow:
+0 0 40px rgba(0,255,238,.35);
+}
+
+.sidebtn{
+width:74px;
+height:74px;
+border-radius:24px;
+border:1px solid rgba(255,255,255,.06);
+background:rgba(255,255,255,.03);
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+transition:.3s;
+font-size:13px;
+gap:5px;
+}
+
+.sidebtn:hover{
+transform:translateY(-4px) scale(1.04);
+border-color:#00ffee;
+box-shadow:
+0 0 35px rgba(0,255,238,.14);
+}
+
+/* MAIN */
+
+.main{
+flex:1;
+display:flex;
+flex-direction:column;
+padding:20px;
+gap:20px;
+overflow:hidden;
+}
+
+/* TOPBAR */
+
+.topbar{
+height:90px;
+border-radius:30px;
+background:rgba(15,15,15,.82);
+border:1px solid rgba(255,255,255,.06);
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 30px;
+backdrop-filter:blur(20px);
+}
+
+.title h1{
+font-size:30px;
+font-weight:800;
+}
+
+.title p{
+font-size:12px;
+opacity:.6;
+}
+
+.search{
+width:450px;
+height:54px;
+border-radius:20px;
+border:1px solid rgba(255,255,255,.06);
+background:rgba(255,255,255,.04);
+padding:0 18px;
+color:white;
+font-size:14px;
+outline:none;
+}
+
+.search:focus{
+border-color:#00ffee;
+}
+
+/* CONTENT */
+
+.content{
+flex:1;
+display:grid;
+grid-template-columns:1.7fr 1fr;
+gap:20px;
+overflow:hidden;
+}
+
+/* GLASS PANEL */
+
+.panel{
+background:rgba(15,15,15,.82);
+border-radius:30px;
+border:1px solid rgba(255,255,255,.06);
+backdrop-filter:blur(20px);
+overflow:hidden;
+}
+
+/* PROJECTS */
+
+.projects{
+padding:24px;
+display:flex;
+flex-direction:column;
+overflow:auto;
+}
+
+.sectionTitle{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.sectionTitle h2{
+font-size:24px;
+}
+
+.toggle{
+padding:12px 18px;
+border-radius:16px;
+background:rgba(0,255,238,.08);
+border:1px solid rgba(0,255,238,.18);
+font-size:12px;
+}
+
+.projectGrid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+gap:18px;
+}
+
+.project{
+min-height:190px;
+border-radius:28px;
+background:rgba(255,255,255,.03);
+border:1px solid rgba(255,255,255,.06);
+padding:22px;
+position:relative;
+overflow:hidden;
+transition:.35s;
+cursor:pointer;
+}
+
+.project:hover{
+transform:translateY(-6px);
+border-color:#00ffee;
+box-shadow:
+0 0 45px rgba(0,255,238,.12);
+}
+
+.project::before{
+content:'';
+position:absolute;
+width:160%;
+height:160%;
+background:radial-gradient(circle,#00ffee22,transparent 60%);
+top:-80%;
+left:-30%;
+}
+
+.project h3{
+font-size:24px;
+margin-bottom:10px;
+position:relative;
+z-index:2;
+}
+
+.project p{
+font-size:13px;
+opacity:.7;
+line-height:1.5;
+position:relative;
+z-index:2;
+}
+
+.project .meta{
+position:absolute;
+bottom:18px;
+left:22px;
+font-size:12px;
+color:#00ffee;
+z-index:2;
+}
+
+/* RIGHT */
+
+.right{
+display:flex;
+flex-direction:column;
+gap:20px;
+overflow:hidden;
+}
+
+/* AGENTS */
+
+.agents{
+padding:22px;
+overflow:auto;
+}
+
+.agent{
+border-radius:24px;
+background:rgba(255,255,255,.03);
+border:1px solid rgba(255,255,255,.06);
+padding:18px;
+margin-bottom:14px;
+transition:.3s;
+}
+
+.agent:hover{
+transform:translateX(6px);
+border-color:#7367ff;
+}
+
+.agent h3{
+font-size:18px;
+margin-bottom:6px;
+}
+
+.agent p{
+font-size:12px;
+opacity:.7;
+line-height:1.4;
+}
+
+/* PROFILES */
+
+.profile{
+border-radius:24px;
+background:rgba(255,255,255,.03);
+border:1px solid rgba(255,255,255,.06);
+padding:18px;
+margin-bottom:14px;
+}
+
+.profile h3{
+margin-bottom:12px;
+font-size:18px;
+}
+
+.checks{
+display:flex;
+flex-direction:column;
+gap:8px;
+font-size:13px;
+opacity:.85;
+}
+
+.checks label{
+display:flex;
+gap:10px;
+align-items:center;
+}
+
+/* CODE GRID */
+
+.codes{
+padding:22px;
+overflow:auto;
+}
+
+.codeGrid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+}
+
+.cube{
+aspect-ratio:1/1;
+border-radius:24px;
+background:
+linear-gradient(
+135deg,
+rgba(255,255,255,.08),
+rgba(255,255,255,.02)
+);
+border:1px solid rgba(255,255,255,.06);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+font-weight:800;
+cursor:pointer;
+transition:.35s;
+}
+
+.cube:hover{
+transform:
+perspective(800px)
+rotateX(10deg)
+rotateY(-10deg)
+scale(1.05);
+
+border-color:#00ffee;
+
+box-shadow:
+0 0 40px rgba(0,255,238,.18);
+}
+
+/* STATUS */
+
+.status{
+position:fixed;
+right:24px;
+bottom:24px;
+width:350px;
+padding:18px;
+border-radius:26px;
+background:rgba(10,10,10,.9);
+border:1px solid rgba(255,255,255,.06);
+backdrop-filter:blur(20px);
+z-index:30;
+}
+
+.status h3{
+margin-bottom:10px;
+}
+
+.status p{
+font-size:13px;
+opacity:.75;
+line-height:1.5;
+}
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar{
+width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+background:#1d1d1d;
+border-radius:20px;
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="app">
+
+<div class="sidebar">
+
+<div class="logo">O</div>
+
+<div class="sidebtn">💬<span>Chats</span></div>
+<div class="sidebtn">📁<span>Groups</span></div>
+<div class="sidebtn">📌<span>Pins</span></div>
+<div class="sidebtn">🤖<span>Agents</span></div>
+<div class="sidebtn">🧊<span>Codes</span></div>
+<div class="sidebtn">🏗<span>Build</span></div>
+<div class="sidebtn">🎯<span>Vision</span></div>
+
+</div>
+
+<div class="main">
+
+<div class="topbar">
+
+<div class="title">
+<h1>OverDOn</h1>
+<p>ODOAgents Neural Workspace</p>
+</div>
+
+<input class="search" placeholder="Search projects, memory, agents, code...">
+
+</div>
+
+<div class="content">
+
+<!-- LEFT -->
+
+<div class="panel projects">
+
+<div class="sectionTitle">
+<h2>Build Chats</h2>
+<div class="toggle">PROJECT MODE ENABLED</div>
+</div>
+
+<div class="projectGrid">
+
+<div class="project">
+<h3>BeeBox</h3>
+<p>make cinematic bee selling website with alive particles and parallax...</p>
+<div class="meta">GPT + Gemini + DeepSeek</div>
+</div>
+
+<div class="project">
+<h3>AI Hub</h3>
+<p>import all chats and merge provider memories together...</p>
+<div class="meta">Multi Provider</div>
+</div>
+
+<div class="project">
+<h3>ODOAgents</h3>
+<p>autonomous coding and routing environment...</p>
+<div class="meta">Claude + GPT</div>
+</div>
+
+<div class="project">
+<h3>Bitmap Engine</h3>
+<p>smooth gif rendering and cinematic visual effects...</p>
+<div class="meta">GPT + DS</div>
+</div>
+
+</div>
+
+</div>
+
+<!-- RIGHT -->
+
+<div class="right">
+
+<div class="panel agents">
+
+<div class="sectionTitle">
+<h2>ODOAgents</h2>
+</div>
+
+<div class="agent">
+<h3>ODOCoder</h3>
+<p>
+Task: Coding<br>
+Uses: GPT + DeepSeek + Claude<br>
+Priority: Accuracy + optimization
+</p>
+</div>
+
+<div class="agent">
+<h3>ODOUI</h3>
+<p>
+Task: UI / Visual Systems<br>
+Uses: Gemini + GPT<br>
+Priority: Cinematic polish
+</p>
+</div>
+
+<div class="agent">
+<h3>ODOResearch</h3>
+<p>
+Task: Research / Analysis<br>
+Uses: Claude + Gemini<br>
+Priority: Deep context
+</p>
+</div>
+
+<div class="profile">
+
+<h3>Profiles</h3>
+
+<div class="checks">
+
+<label><input type="checkbox" checked> Enable GPT</label>
+<label><input type="checkbox" checked> Enable Gemini</label>
+<label><input type="checkbox" checked> Enable Claude</label>
+<label><input type="checkbox" checked> Enable DeepSeek</label>
+<label><input type="checkbox"> Enable Grok</label>
+
+<br>
+
+<label><input type="checkbox" checked> Use Coding Agents</label>
+<label><input type="checkbox" checked> Use Research Agents</label>
+<label><input type="checkbox"> Enable Experimental</label>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="panel codes">
+
+<div class="sectionTitle">
+<h2>ONLY CODES</h2>
+</div>
+
+<div class="codeGrid">
+
+<div class="cube">PY</div>
+<div class="cube">JS</div>
+<div class="cube">CPP</div>
+<div class="cube">WEB</div>
+<div class="cube">AI</div>
+<div class="cube">SYS</div>
+<div class="cube">BOT</div>
+<div class="cube">UI</div>
+<div class="cube">BLDR</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="status">
+<h3>Workspace Status</h3>
+<p>
+ODOAgents synchronized.<br>
+4 AI providers active.<br>
+Project memory indexed.<br>
+Controller layer standby.<br>
+OverDOn Runtime operational.
+</p>
+</div>
+
+<script>
+
+const canvas=document.getElementById('bg');
+const ctx=canvas.getContext('2d');
+
+let w,h;
+let particles=[];
+
+function resize(){
+w=canvas.width=window.innerWidth;
+h=canvas.height=window.innerHeight;
+}
+
+window.addEventListener('resize',resize);
+resize();
+
+class Particle{
+
+constructor(){
+this.reset();
+}
+
+reset(){
+this.x=Math.random()*w;
+this.y=Math.random()*h;
+this.r=Math.random()*2+1;
+this.vx=(Math.random()-.5)*0.25;
+this.vy=(Math.random()-.5)*0.25;
+}
+
+move(){
+
+this.x+=this.vx;
+this.y+=this.vy;
+
+if(this.x<0||this.x>w||this.y<0||this.y>h){
+this.reset();
+}
+
+ctx.beginPath();
+ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+ctx.fillStyle='rgba(0,255,238,.45)';
+ctx.fill();
+
+}
+
+}
+
+for(let i=0;i<120;i++){
+particles.push(new Particle());
+}
+
+function animate(){
+
+ctx.clearRect(0,0,w,h);
+
+const grad=ctx.createLinearGradient(0,0,w,h);
+
+grad.addColorStop(0,'#050505');
+grad.addColorStop(1,'#0b0b14');
+
+ctx.fillStyle=grad;
+ctx.fillRect(0,0,w,h);
+
+particles.forEach(p=>p.move());
+
+requestAnimationFrame(animate);
+
+}
+
+animate();
+
+</script>
+
+</body>
+</html>
