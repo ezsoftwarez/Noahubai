@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGENT.EXE — AUTOMATED MAX</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06060e;
+  --s1: #0c0c1a;
+  --s2: #111122;
+  --border: #1a1a2e;
+  --border2: #2a2a4a;
+  --green: #00ffaa;
+  --red: #ff3e6c;
+  --gold: #ffd700;
+  --purple: #a78bfa;
+  --blue: #38bdf8;
+  --text: #dde0f0;
+  --muted: #555577;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden;position:relative;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(0,0,0,.08),rgba(0,0,0,.08) 2px,transparent 2px,transparent 4px);}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,170,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,170,.015) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+.glitch-overlay{position:fixed;inset:0;pointer-events:none;z-index:9998;mix-blend-mode:difference;animation:glitchSkew .3s infinite steps(1);opacity:.02;}
+@keyframes glitchSkew{0%{transform:skew(0deg);}25%{transform:skew(2deg);}50%{transform:skew(-1deg);}75%{transform:skew(0deg);}100%{transform:skew(1deg);}}
+
+header{position:sticky;top:0;z-index:100;background:rgba(6,6,14,.98);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.logo{font-family:var(--font-display);font-size:1.8rem;letter-spacing:4px;color:var(--green);text-shadow:0 0 20px rgba(0,255,170,.4);position:relative;}
+.logo::after{content:'AUTO';position:absolute;top:-4px;right:-32px;font-size:.6rem;color:var(--red);text-shadow:0 0 6px var(--red);letter-spacing:2px;}
+.sub{font-family:var(--font-mono);font-size:.58rem;color:var(--muted);letter-spacing:2px;margin-top:2px;}
+.live{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:.65rem;color:var(--muted);}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.8s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:28px 18px 60px;display:grid;grid-template-columns:1fr 360px;gap:20px;}
+@media(max-width:800px){.wrap{grid-template-columns:1fr;}}
+
+.panel{background:var(--s1);border:1px solid var(--border);overflow:hidden;transition:box-shadow .3s;}
+.panel:hover{box-shadow:0 0 12px rgba(0,255,170,.04);}
+.panel-head{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--s2);}
+.panel-title{font-family:var(--font-mono);font-size:.68rem;letter-spacing:2px;color:var(--muted);}
+.panel-title strong{color:var(--green);}
+.panel-body{padding:18px;}
+
+.field-label{font-family:var(--font-mono);font-size:.6rem;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;display:block;}
+.field{width:100%;background:var(--s2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-mono);font-size:.78rem;padding:10px 14px;outline:none;margin-bottom:12px;resize:vertical;transition:border-color .2s;}
+.field:focus{border-color:var(--green);box-shadow:0 0 12px rgba(0,255,170,.1);}
+textarea.field{min-height:70px;}
+
+.skills-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.skill-chip{font-family:var(--font-mono);font-size:.6rem;padding:5px 11px;border:1px solid var(--border2);color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:1px;border-radius:2px;}
+.skill-chip.on{border-color:var(--green);color:var(--green);background:rgba(0,255,170,.06);}
+
+.btn{font-family:var(--font-display);letter-spacing:2px;padding:11px 22px;border:none;cursor:pointer;transition:all .2s;font-size:.95rem;white-space:nowrap;border-radius:2px;}
+.btn-green{background:var(--green);color:#000;}
+.btn-green:hover:not(:disabled){box-shadow:0 0 20px rgba(0,255,170,.35);transform:translateY(-1px);}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--green);color:var(--green);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+.plat-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;}
+.plat-tab{font-family:var(--font-mono);font-size:.6rem;padding:6px 12px;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:1px;border-radius:2px;}
+.plat-tab.on{border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,.06);}
+
+.leads-list{display:flex;flex-direction:column;gap:8px;max-height:600px;overflow-y:auto;}
+.lead-card{background:var(--s2);border:1px solid var(--border);padding:14px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;animation:fadeUp .3s ease both;transition:border-color .2s;}
+.lead-card:hover{border-color:var(--border2);}
+.lead-card.active{border-color:var(--green);background:rgba(0,255,170,.02);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.lead-platform{font-family:var(--font-mono);font-size:.55rem;color:var(--purple);letter-spacing:1px;margin-bottom:3px;}
+.lead-name{font-weight:600;font-size:.88rem;color:#fff;margin-bottom:3px;}
+.lead-need{font-size:.75rem;color:var(--muted);line-height:1.5;margin-bottom:6px;}
+.lead-budget{font-family:var(--font-mono);font-size:.65rem;color:var(--gold);}
+
+.send-btn{font-family:var(--font-display);font-size:.8rem;letter-spacing:1.5px;padding:7px 14px;background:transparent;border:1px solid var(--green);color:var(--green);cursor:pointer;transition:all .15s;white-space:nowrap;border-radius:2px;}
+.send-btn:hover{background:var(--green);color:#000;}
+.sent-badge{font-family:var(--font-mono);font-size:.6rem;color:var(--green);padding:4px 8px;border:1px solid rgba(0,255,170,.2);background:rgba(0,255,170,.04);white-space:nowrap;}
+
+.msg-box{background:var(--s2);border:1px solid var(--border2);padding:14px;font-family:var(--font-mono);font-size:.72rem;line-height:1.8;color:var(--text);margin-bottom:10px;white-space:pre-wrap;min-height:80px;max-height:240px;overflow-y:auto;}
+.copy-btn{font-family:var(--font-mono);font-size:.62rem;padding:7px 14px;background:transparent;border:1px solid var(--border2);color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:1px;border-radius:2px;}
+.copy-btn:hover{border-color:var(--green);color:var(--green);}
+.copy-btn.copied{border-color:var(--green);color:var(--green);}
+
+.reply-section{margin-bottom:16px;}
+.reply-label{font-family:var(--font-mono);font-size:.6rem;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px;display:block;}
+.reply-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.reply-btn{font-family:var(--font-mono);font-size:.65rem;padding:9px 10px;background:var(--s2);border:1px solid var(--border2);color:var(--text);cursor:pointer;transition:all .15s;text-align:left;letter-spacing:.5px;line-height:1.4;border-radius:2px;}
+.reply-btn:hover{border-color:var(--green);color:var(--green);background:rgba(0,255,170,.04);}
+.reply-btn span{display:block;font-size:.55rem;color:var(--muted);margin-top:2px;}
+
+.iban-box{background:var(--s2);border:1px solid var(--border2);padding:12px 14px;margin-bottom:10px;}
+.iban-val{font-family:var(--font-mono);font-size:.75rem;color:var(--gold);word-break:break-all;}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.stat{background:var(--s2);border:1px solid var(--border);padding:12px;text-align:center;}
+.stat-num{font-family:var(--font-display);font-size:1.6rem;letter-spacing:2px;color:var(--green);}
+.stat-label{font-family:var(--font-mono);font-size:.55rem;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+
+.loader{display:flex;justify-content:center;align-items:center;gap:8px;padding:40px;font-family:var(--font-mono);font-size:.7rem;color:var(--muted);letter-spacing:2px;}
+.ld{display:flex;gap:5px;}
+.ld span{width:7px;height:7px;background:var(--green);animation:ldB .9s infinite ease-in-out both;border-radius:50%;}
+.ld span:nth-child(2){animation-delay:.15s;background:var(--gold);}
+.ld span:nth-child(3){animation-delay:.3s;background:var(--purple);}
+@keyframes ldB{0%,80%,100%{transform:scale(.2);opacity:.3;}40%{transform:scale(1);opacity:1;}}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);}
+::-webkit-scrollbar-thumb:hover{background:var(--green);}
+
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);font-family:var(--font-mono);font-size:.7rem;line-height:2;letter-spacing:1px;}
+.empty-state .ei{font-size:2.5rem;margin-bottom:12px;}
+
+.api-key-row{display:flex;gap:8px;align-items:flex-end;}
+.api-key-row .field{margin-bottom:0;flex:1;}
+.status-ok{color:var(--green);}
+.status-err{color:var(--red);}
+
+#blurCanvas{max-width:100%;margin:10px 0;display:none;}
+#blurUpload{display:none;}
+
+.history-log{max-height:300px;overflow-y:auto;font-family:var(--font-mono);font-size:.65rem;line-height:1.8;color:var(--text);}
+.history-entry{padding:4px 0;border-bottom:1px solid var(--border);}
+
+.auto-hunt-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.toggle-switch{position:relative;display:inline-block;width:44px;height:22px;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--border2);transition:.3s;border-radius:22px;}
+.slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:var(--muted);transition:.3s;border-radius:50%;}
+input:checked+.slider{background:var(--green);}
+input:checked+.slider:before{transform:translateX(22px);background:#000;}
+</style>
+</head>
+<body>
+<div class="glitch-overlay"></div>
+
+<header>
+  <div>
+    <div class="logo">AGENT<em>.EXE</em></div>
+    <div class="sub">// SWARM AUTOMATA — MINDEN MENTVE</div>
+  </div>
+  <div class="live">
+    <div class="dot" id="liveDot"></div>
+    <span id="statusTxt">READY</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- LEFT: MAIN -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- API KEY -->
+    <div class="panel" id="apiPanel">
+      <div class="panel-head">
+        <div class="panel-title"><strong>// OPENROUTER API</strong></div>
+        <button class="btn btn-ghost" style="font-size:.65rem;padding:6px 12px;" onclick="toggleApiPanel()">ÖSSZECSUK</button>
+      </div>
+      <div class="panel-body" id="apiBody">
+        <label class="field-label">API KEY</label>
+        <div class="api-key-row">
+          <input class="field" id="apiKeyInput" type="password" placeholder="sk-or-v1-...">
+          <button class="btn btn-green" onclick="saveApiKey()" style="padding:10px 16px;font-size:.75rem;">MENTÉS</button>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:.55rem;color:var(--muted);margin-top:6px;">
+          <span id="apiStatus">— nincs kulcs —</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="panel" id="profilePanel">
+      <div class="panel-head">
+        <div class="panel-title"><strong>// PROFILE</strong></div>
+        <button class="btn btn-ghost" style="font-size:.65rem;padding:6px 12px;" onclick="toggleProfile()">ÖSSZECSUK</button>
+      </div>
+      <div class="panel-body" id="profileBody">
+        <label class="field-label">NEVED</label>
+        <input class="field" id="profName" placeholder="Alex / Laundry">
+        <label class="field-label">BIO</label>
+        <textarea class="field" id="profBio" placeholder="Full-stack dev + music producer..."></textarea>
+        <label class="field-label">IBAN</label>
+        <input class="field" id="profIban" placeholder="SK00 0000 0000 0000 0000 0000">
+        <label class="field-label">SKILLS</label>
+        <div class="skills-wrap" id="skillsWrap"></div>
+        <label class="field-label">PORTFÓLIÓ LINKEK</label>
+        <textarea class="field" id="profLinks" placeholder="https://github.com/...&#10;https://soundcloud.com/..."></textarea>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="saveProfile()">MENTÉS</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('blurUpload').click()">🖼️ BLUR TOOL</button>
+          <input type="file" id="blurUpload" accept="image/*" onchange="handleBlurUpload(event)">
+        </div>
+        <canvas id="blurCanvas" width="400" height="300"></canvas>
+        <div id="blurActions" style="display:none;margin-top:8px;">
+          <button class="btn btn-ghost" onclick="downloadBlurred()">💾 BLURÖLT KÉP LETÖLTÉS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTO-HUNT CONTROLS -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><strong>// ⏱️ AUTO-HUNT SCHEDULER</strong></div>
+      </div>
+      <div class="panel-body">
+        <div class="auto-hunt-controls">
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoHuntToggle" onchange="toggleAutoHunt()">
+            <span class="slider"></span>
+          </label>
+          <span style="font-family:var(--font-mono);font-size:.7rem;color:var(--muted);">AUTOMATIKUS VADÁSZAT</span>
+          <input class="field" id="huntInterval" type="number" value="30" min="5" step="5" style="width:70px;margin:0;"> <span style="font-size:.7rem;">perc</span>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:.55rem;color:var(--muted);margin-top:6px;">Aktív: <span id="autoHuntStatus">NEM</span></div>
+      </div>
+    </div>
+
+    <!-- HUNT CONTROLS -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><strong>// VADÁSZAT</strong></div>
+      </div>
+      <div class="panel-body">
+        <div class="plat-tabs" id="platTabs">
+          <div class="plat-tab on" data-p="Discord indie gamedev servers hiring freelancers">🎮 Indie Dev Discord</div>
+          <div class="plat-tab" data-p="Reddit gamedev forhire art music programmer">📋 Reddit r/forhire</div>
+          <div class="plat-tab" data-p="itch.io looking for collaborators devlogs paid">🕹️ itch.io collab</div>
+          <div class="plat-tab" data-p="indie game music composer sound design needed hired">🎵 Zene megbízás</div>
+          <div class="plat-tab" data-p="small studio freelance programmer graphics tools paid">💻 Kis stúdiók</div>
+          <div class="plat-tab" data-p="Twitch streamer needs overlay graphics tools custom emotes">📺 Streamerek</div>
+        </div>
+        <label class="field-label">EGYEDI KERESÉS</label>
+        <input class="field" id="customSearch" placeholder="pl. 'looking for music composer'...">
+        <div class="btn-row" style="margin-bottom:8px;">
+          <button class="btn btn-green" id="huntBtn" onclick="startHunt()">⚡ SWARM INDÍTÁS (8 modell)</button>
+          <button class="btn btn-ghost" onclick="massGenerate()">📨 GENERÁLJ MINDENKINEK</button>
+          <button class="btn btn-ghost" onclick="massOpen()">🚀 NYISD MEG MINDET</button>
+        </div>
+        <button class="btn btn-ghost" onclick="exportState()" style="font-size:.7rem;">💾 EXPORT</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()" style="font-size:.7rem;">📥 IMPORT</button>
+        <input type="file" id="importFile" accept=".json" onchange="importState(event)" style="display:none;">
+      </div>
+    </div>
+
+    <!-- LEADS -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><strong>// LEADEK</strong> — <span id="leadCount">0</span> · <span style="color:var(--gold);cursor:pointer;" onclick="clearLeads()">TÖRLÉS</span></div>
+      </div>
+      <div class="panel-body" style="padding:12px;">
+        <div id="leadsList"><div class="empty-state"><div class="ei">🔍</div>Nyomj a SWARM-ra</div></div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><strong>// HISTORY</strong></div>
+        <button class="btn btn-ghost" onclick="clearHistory()" style="font-size:.65rem;">TÖRLÉS</button>
+      </div>
+      <div class="panel-body">
+        <div class="history-log" id="historyLog"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: SIDEBAR -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- STATS -->
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title"><strong>// STATS</strong></div></div>
+      <div class="panel-body" style="padding:14px;">
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-num" id="statSent">0</div><div class="stat-label">KIKÜLDVE</div></div>
+          <div class="stat"><div class="stat-num" id="statReply">0</div><div class="stat-label">VÁLASZ</div></div>
+          <div class="stat"><div class="stat-num" id="statDeal" style="color:var(--gold)">0</div><div class="stat-label">DEAL</div></div>
+          <div class="stat"><div class="stat-num" id="statEarn" style="color:var(--gold)">€0</div><div class="stat-label">BEVÉTEL</div></div>
+        </div>
+        <label class="field-label">BEVÉTEL HOZZÁAD</label>
+        <div style="display:flex;gap:6px;">
+          <input class="field" id="earningInput" placeholder="Összeg (€)" style="margin:0;">
+          <button class="btn btn-ghost" onclick="addEarning()">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE MESSAGE -->
+    <div class="panel" id="msgPanel">
+      <div class="panel-head"><div class="panel-title"><strong>// ÜZENET</strong></div></div>
+      <div class="panel-body">
+        <div class="empty-state" id="msgEmpty"><div class="ei">✉️</div>Kattints egy leadre</div>
+        <div id="msgContent" style="display:none;">
+          <div class="msg-box" id="msgText"></div>
+          <div style="display:flex;gap:6px;margin-bottom:14px;">
+            <button class="copy-btn" id="copyBtn" onclick="copyMsg()">📋 COPY</button>
+            <button class="copy-btn" onclick="regenMsg()" style="border-color:var(--purple);color:var(--purple);">🔄 ÚJRA</button>
+            <button class="copy-btn" id="redditBtn" onclick="sendToReddit()" style="border-color:var(--red);color:var(--red);">🔴 REDDIT DM</button>
+          </div>
+          <div class="reply-section">
+            <span class="reply-label">// GYORS VÁLASZOK</span>
+            <div class="reply-btns">
+              <button class="reply-btn" onclick="quickReply(1)">✅ Igen<span>Megerősítés</span></button>
+              <button class="reply-btn" onclick="quickReply(2)">💬 Részletek<span>Több infó</span></button>
+              <button class="reply-btn" onclick="quickReply(3)">💰 Árajánlat<span>Ár</span></button>
+              <button class="reply-btn" onclick="quickReply(4)">📎 Portfólió<span>Minták</span></button>
+            </div>
+          </div>
+          <div class="reply-section">
+            <span class="reply-label">// FIZETÉS</span>
+            <div class="iban-box"><div class="iban-val" id="ibanMsg">—</div></div>
+            <button class="copy-btn" onclick="copyIban()">📋 FIZETÉSI ÜZENET COPY</button>
+          </div>
+          <button class="send-btn" style="width:100%;padding:11px;" onclick="markSent()">✓ JELÖLD KIKÜLDÖTTNEK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPLY OUTPUT -->
+    <div class="panel" id="replyPanel" style="display:none;">
+      <div class="panel-head"><div class="panel-title"><strong>// VÁLASZ</strong></div></div>
+      <div class="panel-body">
+        <div class="msg-box" id="replyText"></div>
+        <button class="copy-btn" onclick="copyReply()">📋 COPY</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const MODELS = [
+  'anthropic/claude-sonnet-4-20250514',
+  'google/gemini-2.5-flash-preview',
+  'mistralai/mistral-small-3.1-24b',
+  'meta-llama/llama-4-maverick',
+  'qwen/qwen2.5-72b-instruct',
+  'deepseek/deepseek-chat',
+  'anthropic/claude-3-haiku',
+  'openai/gpt-4o-mini'
+];
+
+const SKILLS_LIST = ['Game Dev','Unity','Web App','HTML/JS','Python','Node.js','Graphic Design','UI/UX','Logo','Pixel Art','3D Modeling','Music Production','Sound Design','Audio FX','Voice Over','Discord Bot','Browser Tool','Shader/VFX','Animation'];
+
+let state = {
+  apiKey: '',
+  name: '', bio: '', iban: '', skills: [], links: '',
+  leads: [], activeLead: null,
+  sent: 0, reply: 0, deal: 0, earn: 0,
+  activeMsg: '', history: [],
+  profileOpen: true, apiPanelOpen: true,
+  autoHuntIntervalId: null
+};
+
+let replyText = '';
+let blurredImageData = null;
+
+// ─── INIT ─────────────────────────────────────────────────
+window.onload = () => {
+  initSkills();
+  loadAll();
+  updateIbanMsg();
+  updateStats();
+  renderHistory();
+  renderLeads();
+  document.querySelectorAll('.plat-tab').forEach(t => {
+    t.onclick = () => {
+      document.querySelectorAll('.plat-tab').forEach(x=>x.classList.remove('on'));
+      t.classList.add('on');
+    };
+  });
+};
+
+function initSkills() {
+  const wrap = document.getElementById('skillsWrap');
+  wrap.innerHTML = '';
+  SKILLS_LIST.forEach(s => {
+    const d = document.createElement('div');
+    d.className = 'skill-chip';
+    d.textContent = s;
+    d.onclick = () => d.classList.toggle('on');
+    wrap.appendChild(d);
+  });
+}
+
+// ─── STATE MANAGEMENT ────────────────────────────────────
+function saveState() {
+  const toSave = {
+    apiKey: state.apiKey,
+    profile: { name: state.name, bio: state.bio, iban: state.iban, skills: state.skills, links: state.links },
+    leads: state.leads,
+    sent: state.sent, reply: state.reply, deal: state.deal, earn: state.earn,
+    history: state.history
+  };
+  localStorage.setItem('agentFullState', JSON.stringify(toSave));
+}
+
+function loadAll() {
+  const saved = JSON.parse(localStorage.getItem('agentFullState') || '{}');
+  if (saved.apiKey) {
+    state.apiKey = saved.apiKey;
+    document.getElementById('apiKeyInput').value = saved.apiKey;
+    document.getElementById('apiStatus').innerHTML = '<span class="status-ok">✓ Kulcs betöltve</span>';
+  } else {
+    document.getElementById('apiStatus').innerHTML = '— nincs kulcs —';
+  }
+  if (saved.profile) {
+    state.name = saved.profile.name || '';
+    state.bio = saved.profile.bio || '';
+    state.iban = saved.profile.iban || '';
+    state.skills = saved.profile.skills || [];
+    state.links = saved.profile.links || '';
+    document.getElementById('profName').value = state.name;
+    document.getElementById('profBio').value = state.bio;
+    document.getElementById('profIban').value = state.iban;
+    document.getElementById('profLinks').value = state.links;
+    document.querySelectorAll('.skill-chip').forEach(c => {
+      if (state.skills.includes(c.textContent)) c.classList.add('on');
+    });
+  }
+  if (saved.leads) state.leads = saved.leads;
+  state.sent = saved.sent || 0;
+  state.reply = saved.reply || 0;
+  state.deal = saved.deal || 0;
+  state.earn = saved.earn || 0;
+  state.history = saved.history || [];
+}
+
+function exportState() {
+  const blob = new Blob([JSON.stringify(JSON.parse(localStorage.getItem('agentFullState')||'{}'), null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'agent_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  flash('✓ Állapot exportálva');
+}
+
+function importState(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      localStorage.setItem('agentFullState', JSON.stringify(data));
+      loadAll();
+      updateIbanMsg();
+      updateStats();
+      renderHistory();
+      renderLeads();
+      document.getElementById('leadCount').textContent = state.leads.length;
+      flash('✓ Állapot importálva');
+    } catch(ex) { flash('Hibás fájl'); }
+  };
+  reader.readAsText(file);
+}
+
+// ─── API KEY ──────────────────────────────────────────────
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) return flash('Add meg a kulcsot!');
+  state.apiKey = key;
+  saveState();
+  document.getElementById('apiStatus').innerHTML = '<span class="status-ok">✓ Kulcs mentve</span>';
+  flash('✓ API kulcs mentve');
+}
+
+function toggleApiPanel() {
+  state.apiPanelOpen = !state.apiPanelOpen;
+  document.getElementById('apiBody').style.display = state.apiPanelOpen ? '' : 'none';
+}
+
+// ─── PROFILE ──────────────────────────────────────────────
+function saveProfile() {
+  state.name = document.getElementById('profName').value.trim();
+  state.bio = document.getElementById('profBio').value.trim();
+  state.iban = document.getElementById('profIban').value.trim();
+  state.links = document.getElementById('profLinks').value.trim();
+  state.skills = [...document.querySelectorAll('.skill-chip.on')].map(c => c.textContent);
+  saveState();
+  updateIbanMsg();
+  flash('✓ Profil mentve');
+  toggleProfile();
+}
+
+function toggleProfile() {
+  state.profileOpen = !state.profileOpen;
+  document.getElementById('profileBody').style.display = state.profileOpen ? '' : 'none';
+}
+
+function updateIbanMsg() {
+  const iban = state.iban;
+  const name = state.name || 'Me';
+  document.getElementById('ibanMsg').textContent = iban
+    ? `Great working with you! Payment:\nName: ${name}\nIBAN: ${iban}\nThank you!`
+    : '— IBAN nincs megadva —';
+}
+
+// ─── HISTORY ──────────────────────────────────────────────
+function addHistory(action, detail='') {
+  state.history.push({ time: new Date().toLocaleString(), action, detail });
+  saveState();
+  renderHistory();
+}
+
+function clearHistory() {
+  if (!confirm('Biztosan törlöd a teljes historyt?')) return;
+  state.history = [];
+  saveState();
+  renderHistory();
+  flash('History törölve');
+}
+
+function renderHistory() {
+  const log = document.getElementById('historyLog');
+  if (!state.history.length) {
+    log.innerHTML = '<div class="empty-state"><div class="ei">📜</div>Még nincs bejegyzés</div>';
+    return;
+  }
+  log.innerHTML = state.history.slice(-100).reverse().map(h =>
+    `<div class="history-entry"><span style="color:var(--muted)">${esc(h.time)}</span> <strong>${esc(h.action)}</strong> ${esc(h.detail)}</div>`
+  ).join('');
+}
+
+// ─── STATS ────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('statSent').textContent = state.sent;
+  document.getElementById('statReply').textContent = state.reply;
+  document.getElementById('statDeal').textContent = state.deal;
+  document.getElementById('statEarn').textContent = '€' + state.earn.toFixed(2);
+}
+
+function addEarning() {
+  const val = parseFloat(document.getElementById('earningInput').value);
+  if (isNaN(val) || val <= 0) return flash('Érvényes összeget adj meg!');
+  state.earn += val;
+  updateStats();
+  addHistory('+€' + val.toFixed(2), 'Bevétel rögzítve');
+  document.getElementById('earningInput').value = '';
+  saveState();
+  flash('€' + val.toFixed(2) + ' hozzáadva');
+}
+
+// ─── LEADS RENDERING ─────────────────────────────────────
+function clearLeads() {
+  if (!confirm('Biztosan törlöd az összes leadet?')) return;
+  state.leads = [];
+  state.activeLead = null;
+  saveState();
+  renderLeads();
+  document.getElementById('leadCount').textContent = '0';
+  flash('Leadek törölve');
+}
+
+function renderLeads() {
+  const wrap = document.getElementById('leadsList');
+  if (!state.leads.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="ei">🔍</div>Nincs lead</div>';
+    document.getElementById('leadCount').textContent = '0';
+    return;
+  }
+  document.getElementById('leadCount').textContent = state.leads.length;
+  wrap.innerHTML = state.leads.map((l, i) => `
+    <div class="lead-card ${state.activeLead===i?'active':''}" style="animation-delay:${i*0.02}s">
+      <div>
+        <div class="lead-platform">${esc(l.platform)} · ${esc(l.urgency)}</div>
+        <div class="lead-name">${esc(l.name)}</div>
+        <div class="lead-need">${esc(l.need)}</div>
+        <div class="lead-budget">💰 ${esc(l.budget)} · ${(l.tags||[]).map(t=>'#'+t).join(' ')}</div>
+      </div>
+      <div>
+        ${l.sent
+          ? '<span class="sent-badge">✓ KÜLDVE</span>'
+          : `<button class="send-btn" onclick="selectLead(${i})">ÜZENET →</button>`
+        }
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── MULTI-MODEL API ─────────────────────────────────────
+async function callOpenRouterMulti(prompt, maxTokens=2000) {
+  const key = state.apiKey || document.getElementById('apiKeyInput').value.trim();
+  if (!key) throw new Error('API kulcs hiányzik');
+  const promises = MODELS.map(model =>
+    fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+        'HTTP-Referer': window.location.href,
+        'X-Title': 'AGENT.EXE'
+      },
+      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: maxTokens, temperature: 0.8 })
+    }).then(r => r.json()).then(d => d.choices?.[0]?.message?.content?.trim()).catch(() => null)
+  );
+  const results = (await Promise.allSettled(promises))
+    .filter(r => r.status === 'fulfilled' && r.value)
+    .map(r => r.value);
+  return results;
+}
+
+// ─── HUNT ─────────────────────────────────────────────────
+async function startHunt() {
+  if (!state.apiKey && !document.getElementById('apiKeyInput').value.trim()) {
+    flash('Előbb add meg az API kulcsot!');
+    return;
+  }
+  const btn = document.getElementById('huntBtn');
+  btn.disabled = true;
+  setStatus('SWARM VADÁSZIK...');
+
+  const platform = document.querySelector('.plat-tab.on')?.dataset.p || 'Discord indie gamedev';
+  const custom = document.getElementById('customSearch').value.trim();
+  const searchContext = custom || platform;
+  const skillStr = state.skills.length ? state.skills.join(', ') : 'game dev, music, design';
+
+  document.getElementById('leadsList').innerHTML = '<div class="loader"><div class="ld"><span></span><span></span><span></span></div> 8 modell keres...</div>';
+
+  const prompt = `Generate 5 realistic freelance client leads from: "${searchContext}". Skills: ${skillStr}. Return ONLY JSON array: [{"platform":"...","name":"...","need":"...","budget":"...","urgency":"...","tags":["..."]}]. No markdown.`;
+
+  try {
+    const allResults = await callOpenRouterMulti(prompt, 1500);
+    let newLeads = [];
+    allResults.forEach(text => {
+      const m = text.match(/\[[\s\S]*\]/);
+      if (m) try { newLeads.push(...JSON.parse(m[0])); } catch(e) {}
+    });
+    if (!newLeads.length) throw new Error('Egyik modell sem adott leadet');
+
+    // dedup and add to existing
+    const existingKeys = new Set(state.leads.map(l => l.name + '|' + l.need));
+    let added = 0;
+    newLeads.forEach(l => {
+      const key = l.name + '|' + l.need;
+      if (!existingKeys.has(key)) {
+        state.leads.push({ ...l, id: state.leads.length, sent: false });
+        existingKeys.add(key);
+        added++;
+      }
+    });
+
+    renderLeads();
+    document.getElementById('leadCount').textContent = state.leads.length;
+    setStatus(state.leads.length + ' LEAD');
+    addHistory('Swarm', `${added} új lead hozzáadva`);
+    saveState();
+  } catch (err) {
+    document.getElementById('leadsList').innerHTML = `<div class="empty-state" style="color:var(--red)">HIBA: ${esc(err.message)}</div>`;
+    setStatus('HIBA');
+  }
+  btn.disabled = false;
+}
+
+// ─── AUTO-HUNT ────────────────────────────────────────────
+function toggleAutoHunt() {
+  const checked = document.getElementById('autoHuntToggle').checked;
+  if (checked) {
+    const mins = parseInt(document.getElementById('huntInterval').value) || 30;
+    if (mins < 5) {
+      document.getElementById('huntInterval').value = 5;
+      return flash('Minimum 5 perc');
+    }
+    if (!state.apiKey) {
+      document.getElementById('autoHuntToggle').checked = false;
+      return flash('API kulcs kell az auto-hunt-hoz!');
+    }
+    state.autoHuntIntervalId = setInterval(() => {
+      startHunt().catch(() => {});
+    }, mins * 60 * 1000);
+    document.getElementById('autoHuntStatus').textContent = 'AKTÍV (' + mins + ' perc)';
+    addHistory('Auto-hunt', 'Bekapcsolva, ' + mins + ' percenként');
+    flash('Auto-hunt elindult');
+  } else {
+    if (state.autoHuntIntervalId) clearInterval(state.autoHuntIntervalId);
+    state.autoHuntIntervalId = null;
+    document.getElementById('autoHuntStatus').textContent = 'NEM';
+    addHistory('Auto-hunt', 'Kikapcsolva');
+    flash('Auto-hunt leállítva');
+  }
+}
+
+// ─── MASS OPERATIONS ─────────────────────────────────────
+async function massGenerate() {
+  if (!state.leads.length) return flash('Nincsenek leadek');
+  const unsent = state.leads.filter(l => !l.sent);
+  if (!unsent.length) return flash('Már mind ki van küldve');
+
+  flash(`Generálás ${unsent.length} leadhez...`);
+  setStatus('GENERÁLÁS...');
+
+  for (let lead of unsent) {
+    try {
+      const msg = await generateMessageForLead(lead);
+      lead._generatedMsg = msg;
+    } catch (e) {
+      lead._generatedMsg = 'Hiba: ' + e.message;
+    }
+  }
+  saveState();
+  renderLeads();
+  setStatus('KÉSZ');
+  addHistory('Mass generate', `${unsent.length} üzenet legenerálva`);
+  flash('✓ Minden üzenet legenerálva, nézd át őket');
+}
+
+async function generateMessageForLead(lead) {
+  const name = state.name || 'Alex';
+  const bio = state.bio || 'dev';
+  const skills = state.skills.join(', ') || 'game dev';
+  const links = state.links || '';
+  const prompt = `Write a friendly cold outreach message. Freelancer: ${name}, Skills: ${skills}, Bio: ${bio}, Portfolio: ${links}. Client need: "${lead.need}", Budget: ${lead.budget}. Max 5-6 sentences, casual, end with question. English only. Return ONLY the message.`;
+  const results = await callOpenRouterMulti(prompt, 400);
+  return results[0] || '';
+}
+
+function massOpen() {
+  const unsent = state.leads.filter(l => !l.sent);
+  if (!unsent.length) return flash('Nincs megnyitandó lead');
+
+  let count = 0;
+  unsent.forEach(lead => {
+    const msg = lead._generatedMsg || state.activeMsg || '';
+    if (!msg) return;
+    const username = extractRedditUsername(lead.name);
+    if (!username) return;
+    const url = `https://www.reddit.com/message/compose?to=${encodeURIComponent(username)}&subject=${encodeURIComponent('Freelance inquiry')}&message=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+    count++;
+  });
+  if (count === 0) flash('Egyik leadnél sincs Reddit username');
+  else {
+    flash(`${count} ablak megnyitva`);
+    addHistory('Mass open', `${count} Reddit DM ablak`);
+  }
+}
+
+function extractRedditUsername(name) {
+  // Ha a név úgy néz ki mint u/valami vagy csak ékezet nélküli nick
+  if (!name) return null;
+  let cleaned = name.replace(/^u\//, '').trim();
+  // csak alfanumerikus, aláhúzás, kötőjel engedélyezett
+  if (/^[a-zA-Z0-9_-]{3,20}$/.test(cleaned)) return cleaned;
+  return null;
+}
+
+// ─── LEAD SELECTION ──────────────────────────────────────
+async function selectLead(idx) {
+  state.activeLead = idx;
+  renderLeads();
+  await generateMsg(idx);
+}
+
+async function generateMsg(idx) {
+  const lead = state.leads[idx];
+  document.getElementById('msgEmpty').style.display = 'none';
+  document.getElementById('msgContent').style.display = 'none';
+  const loader = document.createElement('div');
+  loader.id = 'msgLoader';
+  loader.className = 'loader';
+  loader.innerHTML = '<div class="ld"><span></span><span></span><span></span></div>';
+  document.getElementById('msgPanel').querySelector('.panel-body').appendChild(loader);
+
+  try {
+    const msg = await generateMessageForLead(lead);
+    state.activeMsg = msg;
+    lead._generatedMsg = msg;
+    saveState();
+    document.getElementById('msgContent').style.display = 'block';
+    document.getElementById('msgText').textContent = msg;
+    document.getElementById('redditBtn').dataset.leadName = extractRedditUsername(lead.name) || '';
+    updateIbanMsg();
+  } catch (e) {
+    document.getElementById('msgEmpty').style.display = 'block';
+    document.getElementById('msgEmpty').innerHTML = '<span style="color:var(--red)">HIBA</span>';
+  }
+  const l = document.getElementById('msgLoader'); if (l) l.remove();
+}
+
+function regenMsg() {
+  if (state.activeLead === null) return;
+  document.getElementById('msgContent').style.display = 'none';
+  generateMsg(state.activeLead);
+}
+
+function markSent() {
+  if (state.activeLead === null) return;
+  state.leads[state.activeLead].sent = true;
+  state.sent++;
+  updateStats();
+  addHistory('Kiküldve', `Lead: ${state.leads[state.activeLead].name}`);
+  saveState();
+  renderLeads();
+  document.getElementById('msgContent').style.display = 'none';
+  document.getElementById('msgEmpty').style.display = 'block';
+  document.getElementById('msgEmpty').innerHTML = '<div class="ei">✅</div>Kiküldve';
+  state.activeLead = null;
+}
+
+// ─── QUICK REPLIES ───────────────────────────────────────
+async function quickReply(type) {
+  const lead = state.leads[state.activeLead] || {};
+  const types = {
+    1: `Write short enthusiastic confirmation (2-3 sentences). Ask when to start.`,
+    2: `Ask more details about project: timeline, style, requirements (2-3 questions).`,
+    3: `Give a price range for "${lead.need}". Budget: ${lead.budget}. Be flexible.`,
+    4: `Offer to send more portfolio samples relevant to "${lead.need}".`
+  };
+  document.getElementById('replyPanel').style.display = 'block';
+  document.getElementById('replyText').textContent = '⏳';
+  const prompt = `${types[type]}\nFreelancer: ${state.name}\nClient need: ${lead.need}\nEnglish only. Return ONLY message.`;
+  try {
+    const res = await callOpenRouterMulti(prompt, 200);
+    replyText = res[0] || 'Hiba';
+    document.getElementById('replyText').textContent = replyText;
+    if (type === 2) { state.reply++; updateStats(); saveState(); }
+  } catch (e) { document.getElementById('replyText').textContent = 'Hiba'; }
+}
+
+// ─── REDDIT DM ───────────────────────────────────────────
+function sendToReddit() {
+  const msg = state.activeMsg;
+  const username = document.getElementById('redditBtn').dataset.leadName;
+  if (!username) return flash('Nincs Reddit username');
+  window.open(`https://www.reddit.com/message/compose?to=${encodeURIComponent(username)}&subject=${encodeURIComponent('Freelance inquiry')}&message=${encodeURIComponent(msg)}`, '_blank');
+  flash('Reddit üzenet megnyitva');
+}
+
+// ─── BLUR TOOL ───────────────────────────────────────────
+function handleBlurUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.getElementById('blurCanvas');
+      const ctx = canvas.getContext('2d');
+      const maxW = 400;
+      const scale = Math.min(maxW / img.width, 1);
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.filter = 'blur(8px)';
+      ctx.drawImage(canvas, 0, 0);
+      ctx.filter = 'none';
+      canvas.style.display = 'block';
+      document.getElementById('blurActions').style.display = 'block';
+      blurredImageData = canvas.toDataURL('image/png');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function downloadBlurred() {
+  if (!blurredImageData) return;
+  const a = document.createElement('a');
+  a.href = blurredImageData;
+  a.download = 'blurred_preview.png';
+  a.click();
+  flash('✓ Blurölt kép letöltve');
+}
+
+// ─── UTILS ────────────────────────────────────────────────
+function flash(msg) {
+  const el = document.createElement('div');
+  el.textContent = msg;
+  el.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;font-family:var(--font-mono);font-size:.7rem;letter-spacing:2px;padding:10px 20px;z-index:9999;animation:fadeUp .3s ease;`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+function setStatus(t) { document.getElementById('statusTxt').textContent = t; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// clipboard helpers
+function copyMsg() {
+  navigator.clipboard.writeText(state.activeMsg).then(() => flash('✓ Másolva')).catch(() => flash('Kézzel másold'));
+}
+function copyReply() {
+  navigator.clipboard.writeText(replyText).then(() => flash('✓ Válasz másolva'));
+}
+function copyIban() {
+  const t = document.getElementById('ibanMsg').textContent;
+  navigator.clipboard.writeText(t).then(() => {
+    state.deal++; updateStats(); addHistory('Deal', 'IBAN elküldve'); saveState(); flash('✓ Deal rögzítve');
+  });
+}
+</script>
+</body>
+</html>
