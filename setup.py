@@ -129,8 +129,16 @@ class NoahubaiSetup:
         source_dir = Path(__file__).parent
         
         # Directories to copy
-        dirs_to_copy = ["core", "agents", "backend", "frontend", "config", "tests", "docs"]
-        files_to_copy = ["main.py", "requirements.txt", "README.md", "setup.py"]
+        dirs_to_copy = ["core", "agents", "backend", "AI HUB oVerk1LL", "steamish_browser"]
+        files_to_copy = [
+            "main.py",
+            "requirements.txt",
+            "README.md",
+            "setup.py",
+            "ARCHITECTURE_PLAN.md",
+            "COMPLETE_DOCUMENTATION.md",
+            "SYSTEM_SUMMARY.md",
+        ]
         
         try:
             for dir_name in dirs_to_copy:
@@ -188,7 +196,7 @@ class NoahubaiSetup:
         # Create batch file to run application
         batch_file = self.install_dir / "run_noahubai.bat"
         batch_content = f"""@echo off
-"{venv_python}" "{main_py}" %*
+"{venv_python}" "{main_py}" --mode all --open-browser %*
 pause
 """
         
@@ -207,7 +215,7 @@ set PYTHON_EXE={venv_python}
 set MAIN_PY={main_py}
 
 REM Create shortcut (requires PowerShell)
-powershell -NoProfile -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Noahubai.lnk'); $Shortcut.TargetPath = '%PYTHON_EXE%'; $Shortcut.Arguments = '%MAIN_PY%'; $Shortcut.WorkingDirectory = '%SCRIPT_DIR%'; $Shortcut.IconLocation = '%SCRIPT_DIR%'; $Shortcut.Save()"
+powershell -NoProfile -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\\Desktop\\Noahubai.lnk'); $Shortcut.TargetPath = '%PYTHON_EXE%'; $Shortcut.Arguments = '%MAIN_PY%'; $Shortcut.WorkingDirectory = '%SCRIPT_DIR%'; $Shortcut.IconLocation = '%SCRIPT_DIR%'; $Shortcut.Save()"
 
 echo Shortcuts created successfully!
 pause
@@ -247,7 +255,7 @@ Categories=Development;Utility;
         # Create shell script
         shell_script = self.install_dir / "run_noahubai.sh"
         shell_content = f"""#!/bin/bash
-{venv_python} {main_py} "$@"
+{venv_python} {main_py} --mode all --open-browser "$@"
 """
         
         with open(shell_script, 'w') as f:
@@ -266,9 +274,11 @@ Categories=Development;Utility;
         env_content = f"""# Noahubai Configuration
 # Generated: {datetime.now().isoformat()}
 
-# Server
+# Unified launcher
 HOST=0.0.0.0
 PORT=8000
+AIHUB_PORT=8765
+NOAHUBAI_API_URL=http://127.0.0.1:8000
 DEBUG=false
 
 # Logging
@@ -320,15 +330,16 @@ MEMORY_CLEANUP_INTERVAL=3600
         if sys.platform == "win32":
             print(f"   1. Open Command Prompt")
             print(f"   2. Run: {self.install_dir}\\run_noahubai.bat")
-            print(f"   3. Open browser: http://localhost:8000")
+            print(f"   3. Main menu: http://localhost:8765/index.html")
         else:
             print(f"   1. Open Terminal")
             print(f"   2. Run: {self.install_dir}/run_noahubai.sh")
-            print(f"   3. Open browser: http://localhost:8000")
+            print(f"   3. Main menu: http://localhost:8765/index.html")
         
         print("\n📚 Documentation:")
         print(f"   - README: {self.install_dir / 'README.md'}")
-        print(f"   - API Docs: http://localhost:8000/docs")
+        print(f"   - Main menu UI: http://localhost:8765/index.html")
+        print(f"   - API Docs (when backend deps are installed): http://localhost:8000/docs")
         
         print("\n🔧 Configuration:")
         print(f"   - Edit settings: {self.install_dir / '.env'}")
@@ -336,8 +347,8 @@ MEMORY_CLEANUP_INTERVAL=3600
         
         print("\n📖 Next Steps:")
         print("   1. Start the application")
-        print("   2. Open http://localhost:8000 in your browser")
-        print("   3. Check the dashboard for agent status")
+        print("   2. Open the AI Hub main menu")
+        print("   3. Check the bridge/core status cards")
         print("   4. Begin using the system (learn patterns, detect issues, fix problems)")
         
         print("\n💡 Features:")

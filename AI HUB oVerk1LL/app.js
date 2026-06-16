@@ -1852,22 +1852,30 @@ async function refreshBridgeStatus() {
   try {
     const st = await bridgeFetch('/api/bridge/status');
     window._bridgeStatus = st;
+    const backend = st.backend || {};
+    const backendLine = backend.ok
+      ? `Noahubai core ${backend.status || 'online'} · ${backend.healthyAgents ?? 0}/${backend.totalAgents ?? 0} agents healthy`
+      : 'Noahubai core unavailable. The main menu still works; install backend dependencies for API/docs.';
     box.innerHTML =
-      '<h3>Bridge online</h3><p>Cursor transcripts on this PC. Use workspace links below and session list.</p>';
+      '<h3>Main menu online</h3><p>Cursor transcripts on this PC. Use workspace links below and the session list.<br>' +
+      esc(backendLine) +
+      '</p>';
     paintBridgeWorkspaceLinks(st);
     if (badge) {
-      badge.textContent = 'BRIDGE ON';
+      badge.textContent = backend.ok ? 'MENU + CORE' : 'MENU ON';
       badge.style.borderColor = 'rgba(0,255,238,.4)';
     }
+    renderAgentsLive();
     return true;
   } catch (e) {
     window._bridgeStatus = null;
     paintBridgeWorkspaceLinks(null);
     box.innerHTML =
-      '<h3>Bridge offline</h3><p>Run <strong>RUN-AI-HUB.bat</strong> (uses bridge_server.py). Plain file open cannot read Cursor on Windows.<br>' +
+      '<h3>Main menu offline</h3><p>Run <strong>python3 main.py</strong> (single launcher) or start <strong>bridge_server.py</strong> directly. Plain file open cannot read Cursor session data.<br>' +
       esc(e.message) +
       '</p>';
     if (badge) badge.textContent = 'OFFLINE';
+    renderAgentsLive();
     return false;
   }
 }
@@ -3048,12 +3056,35 @@ function renderChatHub() {
   updateSummarizeButton();
 }
 
+function formatCoreAgentName(name) {
+  return String(name || '')
+    .split('_')
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function renderCoreAgentSummary() {
+  const backend = window._bridgeStatus?.backend;
+  if (!backend?.agentNames?.length) return '';
+  return (
+    '<div class="profile"><h3>Noahubai Core</h3><p>' +
+    esc(`${backend.status || 'online'} · ${backend.healthyAgents ?? 0}/${backend.totalAgents ?? backend.agentNames.length} agents healthy`) +
+    '</p><div class="checks">' +
+    backend.agentNames
+      .map(name => '<label><span>•</span><span>' + esc(formatCoreAgentName(name)) + '</span></label>')
+      .join('') +
+    '</div></div>'
+  );
+}
+
 function renderAgentsLive() {
   const host = $('agentLiveList');
   if (!host) return;
   const stats = collectAgentStats();
+  const coreSummary = renderCoreAgentSummary();
   if (!stats.length) {
-    host.innerHTML = '<p class="empty">No agent activity yet.</p>';
+    host.innerHTML = coreSummary || '<p class="empty">No agent activity yet.</p>';
     return;
   }
   host.innerHTML = stats
@@ -3083,7 +3114,7 @@ function renderAgentsLive() {
         '</span></button>'
       );
     })
-    .join('');
+    .join('') + coreSummary;
 }
 
 function renderAgentsView() {
@@ -3992,9 +4023,9 @@ async function boot() {
     const box = $('bridgeStatusBox');
     if (box) {
       box.innerHTML =
-        '<h3>Bridge offline</h3><p>Run <strong>RUN-AI-HUB.bat</strong> from your ai hub folder (do not open the HTML file directly).</p>';
+        '<h3>Main menu offline</h3><p>Run <strong>python3 main.py</strong> (single launcher) or start <strong>bridge_server.py</strong> directly. Do not open the HTML file directly.</p>';
     }
-    setStatus('Bridge offline — use RUN-AI-HUB.bat', false);
+    setStatus('Main menu offline — use python3 main.py', false);
   }
 
   if (location.hash === '#bridge') goToBridge();

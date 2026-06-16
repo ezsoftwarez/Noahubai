@@ -235,7 +235,7 @@ class StateManager:
         await self.merge_dict(memory_key, memory)
         logger.debug(f"Remembered {category}:{key}")
     
-    async def recall(self, category: str, key: str = None) -> Dict:
+    async def recall(self, category: str, key: str = None) -> Any:
         """
         Recall learned memories
         
@@ -251,13 +251,17 @@ class StateManager:
         
         if key:
             if key in memory:
-                # Increment access count
+                # Increment access count for the stored memory entry.
                 memory[key]["access_count"] = memory[key].get("access_count", 0) + 1
                 await self.merge_dict(memory_key, memory)
-                return memory[key]
+                return memory[key].get("content")
             return None
-        
-        return memory
+
+        return {
+            item_key: item_value.get("content")
+            for item_key, item_value in memory.items()
+            if isinstance(item_value, dict)
+        }
     
     async def forget(self, category: str, key: str) -> bool:
         """Remove a memory"""
