@@ -2,20 +2,16 @@
 Core API Server - FastAPI backend for Noahubai
 Handles all agent communication and provides REST/WebSocket interface
 """
-import asyncio
 import logging
-from fastapi import FastAPI, WebSocket, HTTPException, BackgroundTasks
+from fastapi import FastAPI, WebSocket, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from contextlib import asynccontextmanager
 from typing import Dict, Any, List
 from datetime import datetime
 import json
 
-from core import (
-    BaseAgent, AgentRegistry, EventBus, StateManager,
-    AgentConfig, AgentPriority
-)
+from core import AgentRegistry, EventBus, StateManager
 from agents.memory_agent import MemoryAgent
 from agents.issue_agent import IssueAgent
 from agents.fixer_agent import FixerAgent
@@ -27,6 +23,13 @@ event_bus: EventBus = None
 state_manager: StateManager = None
 agent_registry: AgentRegistry = None
 ws_connections: List[WebSocket] = []
+
+
+def _require_fields(payload: Dict[str, Any], *fields: str) -> None:
+    """Raise 400 when required JSON fields are missing."""
+    missing = [field for field in fields if payload.get(field) in (None, "")]
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Missing required field(s): {', '.join(missing)}")
 
 
 # ==================== Startup/Shutdown ====================
@@ -220,6 +223,7 @@ async def restart_agent(agent_name: str):
 @app.post("/api/memory/learn")
 async def learn_pattern(request: Dict[str, Any]):
     """Learn a new pattern for automation"""
+    _require_fields(request, "pattern_id", "pattern_data")
     result = await agent_registry.call_agent(
         "memory_agent",
         "learn_pattern",
@@ -239,6 +243,7 @@ async def get_patterns():
 @app.post("/api/memory/solution")
 async def store_solution(request: Dict[str, Any]):
     """Store a solution for a problem"""
+    _require_fields(request, "problem", "solution")
     result = await agent_registry.call_agent(
         "memory_agent",
         "store_solution",
@@ -271,6 +276,7 @@ async def get_growth_metrics():
 @app.post("/api/issues/detect")
 async def detect_issue(request: Dict[str, Any]):
     """Detect and log a new issue"""
+    _require_fields(request, "type", "message")
     result = await agent_registry.call_agent(
         "issue_agent",
         "detect_issue",
@@ -291,6 +297,16 @@ async def list_issues(status: str = None, severity: str = None):
     return result
 
 
+@app.get("/api/issues/analysis")
+async def analyze_issues():
+    """Analyze all issues for patterns"""
+    result = await agent_registry.call_agent(
+        "issue_agent",
+        "analyze_issues"
+    )
+    return result
+
+
 @app.get("/api/issues/{issue_id}")
 async def get_issue(issue_id: str):
     """Get specific issue details"""
@@ -302,19 +318,10 @@ async def get_issue(issue_id: str):
     return result
 
 
-@app.get("/api/issues/analysis")
-async def analyze_issues():
-    """Analyze all issues for patterns"""
-    result = await agent_registry.call_agent(
-        "issue_agent",
-        "analyze_issues"
-    )
-    return result
-
-
 @app.post("/api/issues/{issue_id}/status")
 async def update_issue_status(issue_id: str, request: Dict[str, Any]):
     """Update issue status"""
+    _require_fields(request, "status")
     result = await agent_registry.call_agent(
         "issue_agent",
         "update_status",
@@ -430,7 +437,7 @@ async def handle_ws_message(message: Dict[str, Any]) -> Dict[str, Any]:
 # ==================== Error Handlers ====================
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request, exc):
+async def general_exception_handler(request: Request, exc: Exception):
     """Global exception handler"""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     
@@ -446,8 +453,90 @@ async def general_exception_handler(request, exc):
 
 # ==================== Root Endpoint ====================
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
+    """Main menu UI for Noahubai."""
+    return """
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Noahubai Main Menu</title>
+  <style>
+    body { margin: 0; background: #0d1117; color: #e6edf3; font-family: Inter, Arial, sans-serif; }
+    .container { max-width: 980px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; }
+    .sub { color: #9da7b3; margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .card { background: #161b22; border: 1px solid #2d333b; border-radius: 12px; padding: 14px; }
+    .btn { border: 0; border-radius: 8px; padding: 8px 12px; margin: 4px 4px 0 0; cursor: pointer; font-weight: 600; }
+    .btn.main { background: #238636; color: #fff; }
+    .btn.alt { background: #30363d; color: #fff; }
+    pre { background: #0b0f14; border: 1px solid #2d333b; border-radius: 8px; padding: 12px; min-height: 260px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Noahubai Main Menu</h1>
+    <p class="sub">Single working UI for Memory, Issue, and Fixer agents.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>System</h3>
+        <button class="btn main" onclick="load('/api/health')">Health</button>
+        <button class="btn alt" onclick="load('/api/status')">Status</button>
+      </div>
+      <div class="card">
+        <h3>Memory Agent</h3>
+        <button class="btn main" onclick="load('/api/memory/patterns')">Patterns</button>
+        <button class="btn alt" onclick="load('/api/memory/growth')">Growth</button>
+      </div>
+      <div class="card">
+        <h3>Issue Agent</h3>
+        <button class="btn main" onclick="load('/api/issues')">List Issues</button>
+        <button class="btn alt" onclick="load('/api/issues/analysis')">Analyze</button>
+      </div>
+      <div class="card">
+        <h3>Fixer Agent</h3>
+        <button class="btn main" onclick="post('/api/fix/all')">Fix All</button>
+      </div>
+    </div>
+    <h3>Output</h3>
+    <pre id="output">Loading /api/health...</pre>
+  </div>
+  <script>
+    const output = document.getElementById('output');
+    async function load(url) {
+      output.textContent = 'Loading ' + url + '...';
+      try {
+        const res = await fetch(url);
+        output.textContent = JSON.stringify(await res.json(), null, 2);
+      } catch (err) {
+        output.textContent = 'Request failed: ' + String(err);
+      }
+    }
+    async function post(url, body = {}) {
+      output.textContent = 'Posting ' + url + '...';
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        output.textContent = JSON.stringify(await res.json(), null, 2);
+      } catch (err) {
+        output.textContent = 'Request failed: ' + String(err);
+      }
+    }
+    load('/api/health');
+  </script>
+</body>
+</html>
+    """
+
+
+@app.get("/api")
+async def api_root():
     """Root endpoint with API documentation"""
     return {
         "name": "Noahubai",
