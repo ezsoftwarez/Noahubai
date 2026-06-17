@@ -54,6 +54,17 @@
       padding: 18px 18px calc(var(--taskbar-height) + 18px);
     }
 
+    .desktop::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.06) 40%, transparent 58%),
+        radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.12), transparent 32%);
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
     .desktop-icons {
       position: absolute;
       top: 18px;
@@ -75,11 +86,19 @@
       color: white;
       text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
       user-select: none;
+      cursor: pointer;
+      transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
     }
 
     .desktop-icon.selected {
       background: rgba(70, 137, 230, 0.35);
       outline: 1px solid rgba(255, 255, 255, 0.28);
+    }
+
+    .desktop-icon:hover {
+      background: rgba(98, 156, 233, 0.22);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+      transform: translateY(-1px);
     }
 
     .desktop-icon-glyph {
@@ -105,11 +124,19 @@
       z-index: 2;
       display: grid;
       grid-template-columns: minmax(350px, 1.4fr) minmax(260px, 0.9fr);
+      grid-template-areas:
+        "home agents"
+        "console notes";
       gap: 18px;
       max-width: 1220px;
       margin: 18px auto 0 130px;
       align-items: start;
     }
+
+    .window-home { grid-area: home; }
+    .window-agents { grid-area: agents; }
+    .window-console { grid-area: console; }
+    .window-notes { grid-area: notes; }
 
     .window-shell {
       border-radius: 8px;
@@ -118,6 +145,15 @@
         inset 0 1px 0 var(--desktop-highlight);
       overflow: hidden;
       backdrop-filter: blur(7px);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .window-shell.focused {
+      transform: translateY(-2px);
+      box-shadow:
+        0 22px 42px rgba(6, 34, 76, 0.42),
+        0 0 0 2px rgba(154, 206, 255, 0.44),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
 
     .window-shell .window {
@@ -128,6 +164,10 @@
 
     .window-body {
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(236, 244, 255, 0.9));
+    }
+
+    .window-body.compact {
+      padding: 14px 16px;
     }
 
     .hero {
@@ -162,6 +202,10 @@
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
+    }
+
+    .hero-actions button {
+      min-width: 132px;
     }
 
     .pill-row {
@@ -239,6 +283,36 @@
       margin-top: 16px;
     }
 
+    .desktop-ribbon {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .ribbon-tile {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(250, 253, 255, 0.95), rgba(226, 239, 255, 0.92));
+      border: 1px solid rgba(98, 139, 191, 0.22);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+    }
+
+    .ribbon-label {
+      margin: 0 0 5px;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .ribbon-value {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #12396e;
+    }
+
     .card {
       border-radius: 12px;
       padding: 14px;
@@ -279,6 +353,16 @@
       background: rgba(255, 255, 255, 0.8);
       border: 1px solid rgba(103, 142, 190, 0.22);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .agent-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      background: linear-gradient(180deg, rgba(63, 147, 255, 0.95), rgba(42, 176, 71, 0.7));
     }
 
     .agent-card header {
@@ -336,6 +420,26 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.35);
       white-space: pre-wrap;
+    }
+
+    .terminal-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #36506b;
+    }
+
+    .console-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px solid rgba(108, 147, 196, 0.2);
     }
 
     .events-empty {
@@ -424,6 +528,16 @@
       border: 1px solid rgba(255, 255, 255, 0.14);
     }
 
+    .tray-pill.connected {
+      background: rgba(102, 210, 126, 0.18);
+      border-color: rgba(206, 255, 216, 0.24);
+    }
+
+    .tray-pill.warning {
+      background: rgba(245, 200, 77, 0.2);
+      border-color: rgba(255, 233, 177, 0.24);
+    }
+
     .start-menu {
       position: fixed;
       left: 10px;
@@ -489,6 +603,18 @@
       gap: 8px;
     }
 
+    .start-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(105, 144, 192, 0.18);
+      font-size: 12px;
+      color: #4c627a;
+    }
+
     .start-link {
       padding: 10px 12px;
       border-radius: 8px;
@@ -543,6 +669,10 @@
       .cards {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
+
+      .desktop-ribbon {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     @media (max-width: 720px) {
@@ -570,6 +700,10 @@
         grid-template-columns: 1fr;
       }
 
+      .desktop-ribbon {
+        grid-template-columns: 1fr;
+      }
+
       .task-buttons {
         display: none;
       }
@@ -588,26 +722,26 @@
 <body>
   <div class="desktop">
     <aside class="desktop-icons">
-      <div class="desktop-icon selected">
+      <div class="desktop-icon selected" data-target="homeWindow">
         <div class="desktop-icon-glyph">N</div>
         <span>Noahubai</span>
       </div>
-      <div class="desktop-icon">
+      <div class="desktop-icon" data-target="agentsWindow">
         <div class="desktop-icon-glyph">A</div>
         <span>Agents</span>
       </div>
-      <div class="desktop-icon">
+      <div class="desktop-icon" data-target="consoleWindow">
         <div class="desktop-icon-glyph">I</div>
         <span>Issues</span>
       </div>
-      <div class="desktop-icon">
+      <div class="desktop-icon" data-action="docs">
         <div class="desktop-icon-glyph">D</div>
         <span>Docs</span>
       </div>
     </aside>
 
     <main class="workspace">
-      <section class="window-shell">
+      <section id="homeWindow" class="window-shell window-home">
         <div class="window active">
           <div class="title-bar">
             <div class="title-bar-text">Noahubai Home</div>
@@ -677,11 +811,30 @@
                 <div class="card-sub">Session event count</div>
               </div>
             </div>
+
+            <div class="desktop-ribbon">
+              <div class="ribbon-tile">
+                <p class="ribbon-label">Last refresh</p>
+                <p class="ribbon-value" id="lastRefreshValue">Waiting for first sync</p>
+              </div>
+              <div class="ribbon-tile">
+                <p class="ribbon-label">Live feed</p>
+                <p class="ribbon-value" id="sessionStateValue">Connecting...</p>
+              </div>
+              <div class="ribbon-tile">
+                <p class="ribbon-label">Issue summary</p>
+                <p class="ribbon-value" id="issueSummaryValue">No data yet</p>
+              </div>
+              <div class="ribbon-tile">
+                <p class="ribbon-label">Agent summary</p>
+                <p class="ribbon-value" id="agentSummaryValue">Waiting for backend</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="window-shell">
+      <section id="agentsWindow" class="window-shell window-agents">
         <div class="window">
           <div class="title-bar">
             <div class="title-bar-text">Agent Overview</div>
@@ -697,7 +850,7 @@
         </div>
       </section>
 
-      <section class="window-shell">
+      <section id="consoleWindow" class="window-shell window-console">
         <div class="window">
           <div class="title-bar">
             <div class="title-bar-text">Issue Console</div>
@@ -708,12 +861,16 @@
             </div>
           </div>
           <div class="window-body">
+            <div class="terminal-toolbar">
+              <span>Live desktop events</span>
+              <span class="console-chip" id="consoleState">Awaiting connection</span>
+            </div>
             <div id="eventConsole" class="terminal"><span class="events-empty">Waiting for desktop events...</span></div>
           </div>
         </div>
       </section>
 
-      <section class="window-shell">
+      <section id="notesWindow" class="window-shell window-notes">
         <div class="window">
           <div class="title-bar">
             <div class="title-bar-text">Desktop Notes</div>
@@ -723,10 +880,9 @@
               <button aria-label="Close"></button>
             </div>
           </div>
-          <div class="window-body">
+          <div class="window-body compact">
             <p>
-              This view preserves the Noahubai backend and gives it the desktop feel you asked for.
-              If you want the shell to go even further, the next steps are draggable windows, more desktop icons, and a dedicated task manager.
+              This desktop keeps Noahubai’s backend intact while shaping it into a more believable Windows 7 control surface.
             </p>
             <ul>
               <li>Health API: <a href="/api/health" target="_blank" rel="noopener">/api/health</a></li>
@@ -734,6 +890,9 @@
               <li>Issue API: <a href="/api/issues" target="_blank" rel="noopener">/api/issues</a></li>
               <li>WebSocket: <code>/ws</code></li>
             </ul>
+            <p>
+              Polished touches in this pass: better desktop balance, stronger tray feedback, faster jump points from icons, and a clearer runtime summary.
+            </p>
           </div>
         </div>
       </section>
@@ -751,6 +910,7 @@
     </div>
     <div class="tray">
       <div class="tray-pill" id="trayHealth">Backend offline</div>
+      <div class="tray-pill warning" id="trayFeed">Live feed offline</div>
       <div class="tray-pill" id="trayClock">--:--</div>
     </div>
   </nav>
@@ -777,6 +937,10 @@
         <div class="start-tool"><strong>Live backend:</strong> Health, issues, and websocket updates all come from Noahubai.</div>
         <div class="start-tool"><strong>Next add-ons:</strong> drag-and-drop windows, file explorer panels, and a richer start menu.</div>
       </div>
+      <div class="start-footer">
+        <span id="startFeedStatus">Feed offline</span>
+        <span id="startLastRefresh">Never refreshed</span>
+      </div>
       <div class="footer-note">Desktop clock and backend health refresh automatically.</div>
     </div>
   </section>
@@ -800,11 +964,20 @@
     const successRate = document.getElementById("successRate");
     const liveEvents = document.getElementById("liveEvents");
     const trayHealth = document.getElementById("trayHealth");
+    const trayFeed = document.getElementById("trayFeed");
     const trayClock = document.getElementById("trayClock");
     const startButton = document.getElementById("startButton");
     const startMenu = document.getElementById("startMenu");
     const refreshButton = document.getElementById("refreshButton");
     const analyzeButton = document.getElementById("analyzeButton");
+    const lastRefreshValue = document.getElementById("lastRefreshValue");
+    const sessionStateValue = document.getElementById("sessionStateValue");
+    const issueSummaryValue = document.getElementById("issueSummaryValue");
+    const agentSummaryValue = document.getElementById("agentSummaryValue");
+    const consoleState = document.getElementById("consoleState");
+    const startFeedStatus = document.getElementById("startFeedStatus");
+    const startLastRefresh = document.getElementById("startLastRefresh");
+    const desktopIcons = Array.from(document.querySelectorAll(".desktop-icon"));
 
     function setBackendStatus(ok, message) {
       backendDot.className = "status-dot " + (ok ? "ok" : "warn");
@@ -815,6 +988,16 @@
     function setSocketStatus(ok, message) {
       socketDot.className = "status-dot " + (ok ? "ok" : "warn");
       socketStatus.textContent = message;
+      trayFeed.textContent = ok ? "Live feed connected" : "Live feed warning";
+      trayFeed.className = "tray-pill " + (ok ? "connected" : "warning");
+      sessionStateValue.textContent = ok ? "Connected and stable" : "Waiting to reconnect";
+      consoleState.textContent = ok ? "Connected" : "Reconnecting";
+      startFeedStatus.textContent = ok ? "Feed connected" : "Feed offline";
+    }
+
+    function setLastRefresh(timestampText) {
+      lastRefreshValue.textContent = timestampText;
+      startLastRefresh.textContent = "Last refresh: " + timestampText;
     }
 
     function appendEvent(text) {
@@ -873,16 +1056,26 @@
 
         const totalAgents = health.system ? health.system.total_agents : 0;
         const healthyCount = health.system ? health.system.healthy_agents : 0;
+        const openIssueCount = (issues.issues || []).filter((issue) => issue.status !== "resolved").length;
 
         setBackendStatus(health.status === "healthy", "Backend " + health.status);
         healthyAgents.textContent = String(healthyCount);
         healthyAgentsSub.textContent = healthyCount + " of " + totalAgents + " healthy";
-        openIssues.textContent = String((issues.issues || []).filter((issue) => issue.status !== "resolved").length);
+        openIssues.textContent = String(openIssueCount);
         successRate.textContent = Math.round((status.statistics.success_rate || 0) * 100) + "%";
+        issueSummaryValue.textContent = openIssueCount === 0 ? "No active issues" : openIssueCount + " issues need review";
+        agentSummaryValue.textContent = healthyCount + " healthy / " + totalAgents + " total";
+        setLastRefresh(new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }));
         renderAgents(status.agents || [], status.health || {});
         appendEvent("Desktop refresh completed.");
       } catch (error) {
         setBackendStatus(false, "Backend unavailable");
+        issueSummaryValue.textContent = "Unable to load issues";
+        agentSummaryValue.textContent = "Backend unavailable";
         appendEvent("Refresh failed: " + error.message);
       }
     }
@@ -892,6 +1085,11 @@
         const response = await fetch("/api/issues/analysis");
         const payload = await response.json();
         appendEvent("Issue analysis: " + JSON.stringify(payload));
+        if (typeof payload.total_issues === "number") {
+          issueSummaryValue.textContent = payload.total_issues === 0
+            ? "No active issue patterns"
+            : payload.total_issues + " total issues analyzed";
+        }
       } catch (error) {
         appendEvent("Issue analysis failed: " + error.message);
       }
@@ -967,6 +1165,34 @@
       if (!startMenu.contains(event.target) && !startButton.contains(event.target)) {
         startMenu.classList.remove("open");
       }
+    });
+
+    desktopIcons.forEach((icon) => {
+      icon.addEventListener("click", () => {
+        desktopIcons.forEach((entry) => entry.classList.remove("selected"));
+        icon.classList.add("selected");
+
+        const action = icon.dataset.action;
+        const targetId = icon.dataset.target;
+
+        if (action === "docs") {
+          window.open("/docs", "_blank", "noopener");
+          return;
+        }
+
+        if (targetId) {
+          const target = document.getElementById(targetId);
+          if (target) {
+            target.classList.remove("focused");
+            window.requestAnimationFrame(() => {
+              target.classList.add("focused");
+            });
+            window.setTimeout(() => {
+              target.classList.remove("focused");
+            }, 1400);
+          }
+        }
+      });
     });
 
     refreshButton.addEventListener("click", loadDashboard);
