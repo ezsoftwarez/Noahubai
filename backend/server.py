@@ -4,9 +4,10 @@ Handles all agent communication and provides REST/WebSocket interface
 """
 import asyncio
 import logging
+from pathlib import Path
 from fastapi import FastAPI, WebSocket, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from contextlib import asynccontextmanager
 from typing import Dict, Any, List
 from datetime import datetime
@@ -21,6 +22,7 @@ from agents.issue_agent import IssueAgent
 from agents.fixer_agent import FixerAgent
 
 logger = logging.getLogger(__name__)
+FRONTEND_FILE = Path(__file__).resolve().parent.parent / "frontend" / "windows7_shell.html"
 
 # Global instances
 event_bus: EventBus = None
@@ -446,24 +448,10 @@ async def general_exception_handler(request, exc):
 
 # ==================== Root Endpoint ====================
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """Root endpoint with API documentation"""
-    return {
-        "name": "Noahubai",
-        "description": "Unified AI Application with Memory, Issue Tracking, and Auto-Fixing",
-        "version": "1.0.0",
-        "docs": "/docs",
-        "endpoints": {
-            "health": "/api/health",
-            "status": "/api/status",
-            "agents": "/api/agents",
-            "memory": "/api/memory/*",
-            "issues": "/api/issues/*",
-            "fixing": "/api/fix/*",
-            "websocket": "/ws"
-        }
-    }
+    """Serve the Windows 7 style Noahubai shell."""
+    return FRONTEND_FILE.read_text(encoding="utf-8")
 
 
 if __name__ == "__main__":
