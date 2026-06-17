@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noahubai Desktop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/7.css">
+  <style>
+    :root {
+      --taskbar-height: 44px;
+      --glass-blue: rgba(28, 75, 138, 0.78);
+      --glass-border: rgba(255, 255, 255, 0.28);
+      --panel-bg: rgba(255, 255, 255, 0.92);
+      --desktop-shadow: rgba(7, 25, 54, 0.4);
+      --desktop-highlight: rgba(255, 255, 255, 0.65);
+      --ok: #2d7d31;
+      --warn: #a56800;
+      --muted: #536172;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.22), transparent 28%),
+        radial-gradient(circle at 82% 18%, rgba(145, 198, 255, 0.25), transparent 26%),
+        linear-gradient(180deg, #1a4486 0%, #2153a5 36%, #3e8de8 72%, #72c7ff 100%);
+      color: #0a1930;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.22), transparent 16%),
+        radial-gradient(circle at 70% 28%, rgba(255, 255, 255, 0.14), transparent 24%),
+        radial-gradient(circle at 55% 78%, rgba(255, 255, 255, 0.12), transparent 30%);
+      pointer-events: none;
+    }
+
+    .desktop {
+      position: relative;
+      min-height: 100vh;
+      padding: 18px 18px calc(var(--taskbar-height) + 18px);
+    }
+
+    .desktop-icons {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 92px;
+      z-index: 1;
+    }
+
+    .desktop-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 4px;
+      border-radius: 6px;
+      color: white;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+      user-select: none;
+    }
+
+    .desktop-icon.selected {
+      background: rgba(70, 137, 230, 0.35);
+      outline: 1px solid rgba(255, 255, 255, 0.28);
+    }
+
+    .desktop-icon-glyph {
+      width: 40px;
+      height: 40px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      background: linear-gradient(180deg, #ffffff, #bddfff);
+      color: #174079;
+      box-shadow: 0 3px 7px rgba(0, 0, 0, 0.28);
+    }
+
+    .desktop-icon span {
+      font-size: 12px;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .workspace {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: minmax(350px, 1.4fr) minmax(260px, 0.9fr);
+      gap: 18px;
+      max-width: 1220px;
+      margin: 18px auto 0 130px;
+      align-items: start;
+    }
+
+    .window-shell {
+      border-radius: 8px;
+      box-shadow:
+        0 18px 40px var(--desktop-shadow),
+        inset 0 1px 0 var(--desktop-highlight);
+      overflow: hidden;
+      backdrop-filter: blur(7px);
+    }
+
+    .window-shell .window {
+      margin: 0;
+      width: 100%;
+      background: var(--panel-bg);
+    }
+
+    .window-body {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(236, 244, 255, 0.9));
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.85fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 8px;
+    }
+
+    .hero-copy h1 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.05;
+      color: #12396e;
+    }
+
+    .hero-copy p {
+      margin: 0;
+      color: #33475d;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(74, 111, 164, 0.2);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #bcc4d0;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+    }
+
+    .status-dot.ok {
+      background: #42b047;
+      box-shadow: 0 0 8px rgba(66, 176, 71, 0.55);
+    }
+
+    .status-dot.warn {
+      background: #d1a100;
+      box-shadow: 0 0 8px rgba(209, 161, 0, 0.45);
+    }
+
+    .hero-side {
+      border-radius: 10px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(235, 246, 255, 0.92), rgba(208, 228, 255, 0.92));
+      border: 1px solid rgba(100, 148, 208, 0.28);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .hero-side h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: #18457f;
+    }
+
+    .quick-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .quick-list li {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(108, 147, 196, 0.2);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .card {
+      border-radius: 12px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(222, 236, 255, 0.9));
+      border: 1px solid rgba(102, 142, 190, 0.22);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .card-label {
+      margin: 0 0 6px;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .card-value {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #0f376a;
+    }
+
+    .card-sub {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #50657a;
+    }
+
+    .agent-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .agent-card {
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(103, 142, 190, 0.22);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    }
+
+    .agent-card header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .agent-card h3 {
+      margin: 0;
+      font-size: 15px;
+      color: #12396e;
+    }
+
+    .agent-meta {
+      margin: 0;
+      font-size: 12px;
+      color: #536172;
+      line-height: 1.45;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(103, 142, 190, 0.2);
+    }
+
+    .badge.ok {
+      color: var(--ok);
+    }
+
+    .badge.warn {
+      color: var(--warn);
+    }
+
+    .terminal {
+      min-height: 280px;
+      max-height: 280px;
+      overflow: auto;
+      padding: 12px;
+      border-radius: 8px;
+      background: #091727;
+      color: #d6f4ff;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.35);
+      white-space: pre-wrap;
+    }
+
+    .events-empty {
+      color: #8da9c5;
+    }
+
+    .taskbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--taskbar-height);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      background: linear-gradient(180deg, rgba(79, 141, 214, 0.98), rgba(23, 73, 145, 0.98));
+      border-top: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow: 0 -6px 16px rgba(4, 18, 41, 0.35);
+      z-index: 20;
+    }
+
+    .start-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 34px;
+      padding: 0 18px 0 14px;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 20px;
+      color: white;
+      background: linear-gradient(180deg, #5fc45b, #2a7f26);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 3px rgba(0, 0, 0, 0.35);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .start-button:hover {
+      filter: brightness(1.05);
+    }
+
+    .task-buttons {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-button {
+      min-width: 180px;
+      max-width: 260px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      height: 31px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: linear-gradient(180deg, rgba(109, 170, 235, 0.85), rgba(47, 104, 182, 0.88));
+      color: white;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .task-button.active {
+      background: linear-gradient(180deg, rgba(195, 223, 255, 0.9), rgba(92, 148, 220, 0.95));
+      color: #103c71;
+    }
+
+    .tray {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .tray-pill {
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .start-menu {
+      position: fixed;
+      left: 10px;
+      bottom: calc(var(--taskbar-height) + 10px);
+      width: min(420px, calc(100vw - 20px));
+      display: none;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 0;
+      border-radius: 8px 8px 0 0;
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 24px 40px rgba(6, 21, 48, 0.42);
+      background: linear-gradient(180deg, rgba(245, 251, 255, 0.98), rgba(224, 239, 255, 0.96));
+      z-index: 19;
+    }
+
+    .start-menu.open {
+      display: grid;
+    }
+
+    .start-left,
+    .start-right {
+      padding: 16px;
+    }
+
+    .start-left {
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .start-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .profile-badge {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      background: linear-gradient(180deg, #d7ecff, #a7cdf8);
+      color: #18457f;
+      border: 1px solid rgba(97, 137, 188, 0.2);
+    }
+
+    .start-profile h3,
+    .start-profile p {
+      margin: 0;
+    }
+
+    .start-profile p {
+      margin-top: 4px;
+      color: #5a6d84;
+      font-size: 12px;
+    }
+
+    .start-links,
+    .start-tools {
+      display: grid;
+      gap: 8px;
+    }
+
+    .start-link {
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #153a6d;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      background: rgba(227, 239, 255, 0.55);
+      border: 1px solid rgba(99, 139, 188, 0.16);
+    }
+
+    .start-link:hover {
+      background: rgba(198, 223, 255, 0.9);
+    }
+
+    .start-right {
+      background: linear-gradient(180deg, rgba(224, 237, 255, 0.95), rgba(196, 220, 250, 0.92));
+      border-left: 1px solid rgba(96, 136, 187, 0.18);
+    }
+
+    .start-right h4 {
+      margin: 0 0 12px;
+      color: #18457f;
+      font-size: 14px;
+    }
+
+    .start-tool {
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(102, 142, 190, 0.18);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #4d627b;
+    }
+
+    @media (max-width: 1120px) {
+      .workspace {
+        grid-template-columns: 1fr;
+        margin-left: 118px;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        overflow: auto;
+      }
+
+      .desktop {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .desktop-icons {
+        position: static;
+        flex-direction: row;
+        width: auto;
+        margin-bottom: 14px;
+      }
+
+      .workspace {
+        margin: 0;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .task-buttons {
+        display: none;
+      }
+
+      .tray {
+        gap: 6px;
+        font-size: 11px;
+      }
+
+      .start-menu {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="desktop">
+    <aside class="desktop-icons">
+      <div class="desktop-icon selected">
+        <div class="desktop-icon-glyph">N</div>
+        <span>Noahubai</span>
+      </div>
+      <div class="desktop-icon">
+        <div class="desktop-icon-glyph">A</div>
+        <span>Agents</span>
+      </div>
+      <div class="desktop-icon">
+        <div class="desktop-icon-glyph">I</div>
+        <span>Issues</span>
+      </div>
+      <div class="desktop-icon">
+        <div class="desktop-icon-glyph">D</div>
+        <span>Docs</span>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <section class="window-shell">
+        <div class="window active">
+          <div class="title-bar">
+            <div class="title-bar-text">Noahubai Home</div>
+            <div class="title-bar-controls" aria-label="Window controls">
+              <button aria-label="Minimize"></button>
+              <button aria-label="Maximize"></button>
+              <button aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="window-body">
+            <div class="hero">
+              <div class="hero-copy">
+                <h1>Noahubai, now with a Windows 7 desktop shell.</h1>
+                <p>
+                  This shell keeps the existing FastAPI backend and overlays it with a Windows 7 inspired control center.
+                  It uses the open-source <strong>7.css</strong> style library plus a thin layer of local UI logic.
+                </p>
+                <div class="hero-actions">
+                  <button id="refreshButton">Refresh desktop</button>
+                  <button id="analyzeButton">Analyze issues</button>
+                  <button onclick="window.open('/docs', '_blank', 'noopener')">Open API docs</button>
+                </div>
+                <div class="pill-row">
+                  <div class="status-pill">
+                    <span id="backendDot" class="status-dot"></span>
+                    <span id="backendStatus">Checking backend...</span>
+                  </div>
+                  <div class="status-pill">
+                    <span id="socketDot" class="status-dot"></span>
+                    <span id="socketStatus">Connecting live feed...</span>
+                  </div>
+                  <div class="status-pill">
+                    <span class="status-dot ok"></span>
+                    <span>Open-source style: 7.css</span>
+                  </div>
+                </div>
+              </div>
+              <aside class="hero-side">
+                <h2>Quick actions</h2>
+                <ul class="quick-list">
+                  <li><strong>Health:</strong> Checks `/api/health` and colors the desktop status indicators.</li>
+                  <li><strong>Live feed:</strong> Streams `/ws` events into the issue console.</li>
+                  <li><strong>Agent view:</strong> Shows each registered agent with state and role.</li>
+                </ul>
+              </aside>
+            </div>
+
+            <div class="cards">
+              <div class="card">
+                <p class="card-label">Healthy agents</p>
+                <p class="card-value" id="healthyAgents">0</p>
+                <div class="card-sub" id="healthyAgentsSub">Waiting for backend</div>
+              </div>
+              <div class="card">
+                <p class="card-label">Open issues</p>
+                <p class="card-value" id="openIssues">0</p>
+                <div class="card-sub">From issue memory</div>
+              </div>
+              <div class="card">
+                <p class="card-label">Success rate</p>
+                <p class="card-value" id="successRate">0%</p>
+                <div class="card-sub">Action history effectiveness</div>
+              </div>
+              <div class="card">
+                <p class="card-label">Live events</p>
+                <p class="card-value" id="liveEvents">0</p>
+                <div class="card-sub">Session event count</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="window-shell">
+        <div class="window">
+          <div class="title-bar">
+            <div class="title-bar-text">Agent Overview</div>
+            <div class="title-bar-controls" aria-label="Window controls">
+              <button aria-label="Minimize"></button>
+              <button aria-label="Maximize"></button>
+              <button aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="window-body">
+            <div id="agentGrid" class="agent-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="window-shell">
+        <div class="window">
+          <div class="title-bar">
+            <div class="title-bar-text">Issue Console</div>
+            <div class="title-bar-controls" aria-label="Window controls">
+              <button aria-label="Minimize"></button>
+              <button aria-label="Maximize"></button>
+              <button aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="window-body">
+            <div id="eventConsole" class="terminal"><span class="events-empty">Waiting for desktop events...</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="window-shell">
+        <div class="window">
+          <div class="title-bar">
+            <div class="title-bar-text">Desktop Notes</div>
+            <div class="title-bar-controls" aria-label="Window controls">
+              <button aria-label="Minimize"></button>
+              <button aria-label="Maximize"></button>
+              <button aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="window-body">
+            <p>
+              This view preserves the Noahubai backend and gives it the desktop feel you asked for.
+              If you want the shell to go even further, the next steps are draggable windows, more desktop icons, and a dedicated task manager.
+            </p>
+            <ul>
+              <li>Health API: <a href="/api/health" target="_blank" rel="noopener">/api/health</a></li>
+              <li>Status API: <a href="/api/status" target="_blank" rel="noopener">/api/status</a></li>
+              <li>Issue API: <a href="/api/issues" target="_blank" rel="noopener">/api/issues</a></li>
+              <li>WebSocket: <code>/ws</code></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="taskbar" aria-label="Taskbar">
+    <button id="startButton" class="start-button" type="button">
+      <span>Start</span>
+    </button>
+    <div class="task-buttons">
+      <div class="task-button active">Noahubai Home</div>
+      <div class="task-button">Agent Overview</div>
+      <div class="task-button">Issue Console</div>
+    </div>
+    <div class="tray">
+      <div class="tray-pill" id="trayHealth">Backend offline</div>
+      <div class="tray-pill" id="trayClock">--:--</div>
+    </div>
+  </nav>
+
+  <section id="startMenu" class="start-menu" aria-label="Start menu">
+    <div class="start-left">
+      <div class="start-profile">
+        <div class="profile-badge">N</div>
+        <div>
+          <h3>Noahubai</h3>
+          <p>Desktop shell mode</p>
+        </div>
+      </div>
+      <div class="start-links">
+        <a class="start-link" href="/" target="_self">Desktop Home</a>
+        <a class="start-link" href="/docs" target="_blank" rel="noopener">API Documentation</a>
+        <a class="start-link" href="/api/status" target="_blank" rel="noopener">System Status JSON</a>
+      </div>
+    </div>
+    <div class="start-right">
+      <h4>System tools</h4>
+      <div class="start-tools">
+        <div class="start-tool"><strong>Open source styling:</strong> 7.css brings the Windows 7 glass UI language.</div>
+        <div class="start-tool"><strong>Live backend:</strong> Health, issues, and websocket updates all come from Noahubai.</div>
+        <div class="start-tool"><strong>Next add-ons:</strong> drag-and-drop windows, file explorer panels, and a richer start menu.</div>
+      </div>
+      <div class="footer-note">Desktop clock and backend health refresh automatically.</div>
+    </div>
+  </section>
+
+  <script>
+    const state = {
+      eventCount: 0,
+      socket: null,
+      pingTimer: null,
+    };
+
+    const agentGrid = document.getElementById("agentGrid");
+    const eventConsole = document.getElementById("eventConsole");
+    const backendDot = document.getElementById("backendDot");
+    const backendStatus = document.getElementById("backendStatus");
+    const socketDot = document.getElementById("socketDot");
+    const socketStatus = document.getElementById("socketStatus");
+    const healthyAgents = document.getElementById("healthyAgents");
+    const healthyAgentsSub = document.getElementById("healthyAgentsSub");
+    const openIssues = document.getElementById("openIssues");
+    const successRate = document.getElementById("successRate");
+    const liveEvents = document.getElementById("liveEvents");
+    const trayHealth = document.getElementById("trayHealth");
+    const trayClock = document.getElementById("trayClock");
+    const startButton = document.getElementById("startButton");
+    const startMenu = document.getElementById("startMenu");
+    const refreshButton = document.getElementById("refreshButton");
+    const analyzeButton = document.getElementById("analyzeButton");
+
+    function setBackendStatus(ok, message) {
+      backendDot.className = "status-dot " + (ok ? "ok" : "warn");
+      backendStatus.textContent = message;
+      trayHealth.textContent = ok ? "Backend healthy" : "Backend warning";
+    }
+
+    function setSocketStatus(ok, message) {
+      socketDot.className = "status-dot " + (ok ? "ok" : "warn");
+      socketStatus.textContent = message;
+    }
+
+    function appendEvent(text) {
+      if (eventConsole.querySelector(".events-empty")) {
+        eventConsole.textContent = "";
+      }
+
+      const now = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      eventConsole.textContent += "[" + now + "] " + text + "\n";
+      eventConsole.scrollTop = eventConsole.scrollHeight;
+      state.eventCount += 1;
+      liveEvents.textContent = String(state.eventCount);
+    }
+
+    function renderAgents(agents, healthMap) {
+      if (!agents.length) {
+        agentGrid.innerHTML = "<p>No agents registered.</p>";
+        return;
+      }
+
+      agentGrid.innerHTML = agents.map((agent) => {
+        const health = healthMap[agent.name] || {};
+        const ok = Boolean(health.healthy);
+        const badgeClass = ok ? "ok" : "warn";
+        const label = ok ? "Ready" : (health.state || "Unknown");
+
+        return `
+          <article class="agent-card">
+            <header>
+              <h3>${agent.name}</h3>
+              <span class="badge ${badgeClass}">${label}</span>
+            </header>
+            <p class="agent-meta"><strong>Type:</strong> ${agent.type}</p>
+            <p class="agent-meta"><strong>Priority:</strong> ${agent.priority}</p>
+            <p class="agent-meta"><strong>Description:</strong> ${agent.description}</p>
+          </article>
+        `;
+      }).join("");
+    }
+
+    async function loadDashboard() {
+      try {
+        const [healthRes, statusRes, issuesRes] = await Promise.all([
+          fetch("/api/health"),
+          fetch("/api/status"),
+          fetch("/api/issues"),
+        ]);
+
+        const health = await healthRes.json();
+        const status = await statusRes.json();
+        const issues = await issuesRes.json();
+
+        const totalAgents = health.system ? health.system.total_agents : 0;
+        const healthyCount = health.system ? health.system.healthy_agents : 0;
+
+        setBackendStatus(health.status === "healthy", "Backend " + health.status);
+        healthyAgents.textContent = String(healthyCount);
+        healthyAgentsSub.textContent = healthyCount + " of " + totalAgents + " healthy";
+        openIssues.textContent = String((issues.issues || []).filter((issue) => issue.status !== "resolved").length);
+        successRate.textContent = Math.round((status.statistics.success_rate || 0) * 100) + "%";
+        renderAgents(status.agents || [], status.health || {});
+        appendEvent("Desktop refresh completed.");
+      } catch (error) {
+        setBackendStatus(false, "Backend unavailable");
+        appendEvent("Refresh failed: " + error.message);
+      }
+    }
+
+    async function analyzeIssues() {
+      try {
+        const response = await fetch("/api/issues/analysis");
+        const payload = await response.json();
+        appendEvent("Issue analysis: " + JSON.stringify(payload));
+      } catch (error) {
+        appendEvent("Issue analysis failed: " + error.message);
+      }
+    }
+
+    function connectSocket() {
+      const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+      const socketUrl = protocol + "://" + window.location.host + "/ws";
+      const socket = new WebSocket(socketUrl);
+      state.socket = socket;
+
+      socket.addEventListener("open", () => {
+        if (state.socket !== socket) {
+          return;
+        }
+        setSocketStatus(true, "Live feed connected");
+        appendEvent("WebSocket connected.");
+        if (state.pingTimer) {
+          window.clearInterval(state.pingTimer);
+        }
+        state.pingTimer = window.setInterval(() => {
+          if (state.socket === socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: "ping" }));
+          }
+        }, 15000);
+      });
+
+      socket.addEventListener("message", (event) => {
+        if (state.socket !== socket) {
+          return;
+        }
+        const data = JSON.parse(event.data);
+        if (data.type === "pong") {
+          return;
+        }
+        appendEvent("Event: " + JSON.stringify(data));
+      });
+
+      socket.addEventListener("close", (event) => {
+        if (state.socket !== socket) {
+          return;
+        }
+        if (state.pingTimer) {
+          window.clearInterval(state.pingTimer);
+          state.pingTimer = null;
+        }
+        state.socket = null;
+        setSocketStatus(false, "Live feed disconnected");
+        appendEvent("WebSocket disconnected. Retrying...");
+        window.setTimeout(connectSocket, 2500);
+      });
+
+      socket.addEventListener("error", () => {
+        if (state.socket !== socket) {
+          return;
+        }
+        setSocketStatus(false, "Live feed error");
+      });
+    }
+
+    function updateClock() {
+      trayClock.textContent = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    startButton.addEventListener("click", () => {
+      startMenu.classList.toggle("open");
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!startMenu.contains(event.target) && !startButton.contains(event.target)) {
+        startMenu.classList.remove("open");
+      }
+    });
+
+    refreshButton.addEventListener("click", loadDashboard);
+    analyzeButton.addEventListener("click", analyzeIssues);
+
+    updateClock();
+    window.setInterval(updateClock, 1000);
+    loadDashboard();
+    connectSocket();
+  </script>
+</body>
+</html>
