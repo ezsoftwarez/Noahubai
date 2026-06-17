@@ -151,10 +151,8 @@ Issue Agent:
   - pattern_threshold: 0.7
 
 Fixer Agent:
-  - auto_fix_enabled: true
   - max_retry_attempts: 3
   - fix_timeout_seconds: 120
-  - safety_checks_enabled: true
   - learning_mode: adaptive|strict|aggressive
   - parallel_fix_limit: 3
 ```
@@ -167,12 +165,11 @@ Fixer Agent:
 - Event history limits
 - Garbage collection intervals
 
-### **Features Management**
+### **Debug Management**
 - Debug mode (per-agent or system-wide)
 - Event logging
 - Call tracing
 - Detailed error reporting
-- Feature toggles
 
 ### **Backup & Restore**
 - Create settings backups
