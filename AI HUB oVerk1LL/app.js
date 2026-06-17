@@ -187,6 +187,8 @@ let saveStateTimer = null;
 let navInitialized = false;
 let bridgePanelAt = 0;
 let cursorSessionsCache = null;
+let machineAgentsCache = null;
+let machineAgentsAt = 0;
 let chatRenderKey = '';
 const CHAT_RENDER_LIMIT = 150;
 const SUMMARIZE_MAX_MESSAGES = 120;
@@ -1838,6 +1840,80 @@ function paintBridgeWorkspaceLinks(st) {
     .join('');
 }
 
+const MACHINE_STATUS_LABEL = {
+  running: 'Running',
+  available: 'Port open',
+  installed: 'Installed',
+  offline: 'Offline'
+};
+
+function paintMachineAgents(payload) {
+  const list = $('machineAgentList');
+  if (!list) return;
+  const agents = (payload && payload.agents) || [];
+  const present = agents.filter(a => a.status !== 'offline');
+  if (!present.length) {
+    list.innerHTML =
+      '<p class="empty">No local AI agents detected. Start Cursor, Ollama, Claude Desktop, etc., then Refresh.</p>';
+    return;
+  }
+  const meta =
+    payload.scanMs != null
+      ? '<p style="font-size:10px;opacity:.45;margin:0 0 8px">' +
+        present.length +
+        ' found · scan ' +
+        payload.scanMs +
+        ' ms</p>'
+      : '';
+  list.innerHTML =
+    meta +
+    present
+      .map(a => {
+        const st = agentMeta(a.hubId || a.id);
+        const status = MACHINE_STATUS_LABEL[a.status] || a.status;
+        const pathBtn =
+          a.paths && a.paths[0]
+            ? ' · <a href="#" data-open-path="' + esc(a.paths[0]) + '">folder</a>'
+            : '';
+        return (
+          '<div class="bridge-session machine-agent" data-agent-id="' +
+          esc(a.id) +
+          '"><h4><span class="folder-tag">' +
+          esc(status) +
+          '</span> ' +
+          esc(a.label) +
+          '</h4><p>' +
+          esc(a.detail || a.note || a.category) +
+          pathBtn +
+          '</p></div>'
+        );
+      })
+      .join('');
+}
+
+async function loadMachineAgents(force) {
+  const list = $('machineAgentList');
+  if (!list) return;
+  const now = Date.now();
+  if (!force && machineAgentsCache && now - machineAgentsAt < 55000) {
+    paintMachineAgents(machineAgentsCache);
+    return machineAgentsCache;
+  }
+  if (!machineAgentsCache) list.innerHTML = '<p class="empty">Scanning local agents…</p>';
+  try {
+    const q = force ? '?refresh=1' : '';
+    const data = await bridgeFetch('/api/bridge/agents/machine' + q);
+    machineAgentsCache = data;
+    machineAgentsAt = Date.now();
+    paintMachineAgents(data);
+    if (isLibraryNav(state.activeNav)) renderLibraryView();
+    return data;
+  } catch (e) {
+    list.innerHTML = '<p class="empty">' + esc(e.message) + '</p>';
+    return null;
+  }
+}
+
 async function goToBridge() {
   if (getStartMode() === 'whole') enterWorkspace();
   switchNav('bridge');
@@ -1852,8 +1928,15 @@ async function refreshBridgeStatus() {
   try {
     const st = await bridgeFetch('/api/bridge/status');
     window._bridgeStatus = st;
+    const ma = st.machineAgents || {};
+    const agentHint =
+      ma.presentCount != null
+        ? ' · ' + ma.presentCount + ' local agent(s) on this PC'
+        : '';
     box.innerHTML =
-      '<h3>Bridge online</h3><p>Cursor transcripts on this PC. Use workspace links below and session list.</p>';
+      '<h3>Bridge online</h3><p>Cursor transcripts + local AI agent scan.' +
+      agentHint +
+      '</p>';
     paintBridgeWorkspaceLinks(st);
     if (badge) {
       badge.textContent = 'BRIDGE ON';
@@ -1986,11 +2069,13 @@ function onBridgePanelClick(ev) {
   if (act?.dataset.bridgeAct === 'scan-all') {
     ev.preventDefault();
     renderCursorSessions(true, true);
+    loadMachineAgents(true);
     return;
   }
   if (act?.dataset.bridgeAct === 'refresh-sessions') {
     ev.preventDefault();
     renderCursorSessions(true, false);
+    loadMachineAgents(true);
   }
 }
 
@@ -2080,10 +2165,11 @@ async function initBridgePanel(force) {
   applyBridgeUI();
   const ok = await refreshBridgeStatus();
   if (ok) {
-    await renderCursorSessions(true, false);
+    await Promise.all([renderCursorSessions(true, false), loadMachineAgents(force)]);
     await loadOutboxPreview();
     const here = (cursorSessionsCache || []).filter(s => s.isThisWorkspace !== false).length;
-    setStatus('Bridge ready · ' + here + ' session(s) for this folder', true);
+    const mc = machineAgentsCache?.presentCount ?? 0;
+    setStatus('Bridge ready · ' + here + ' session(s) · ' + mc + ' agent(s) on PC', true);
   }
 }
 
@@ -3052,14 +3138,33 @@ function renderAgentsLive() {
   const host = $('agentLiveList');
   if (!host) return;
   const stats = collectAgentStats();
+  const machine = (machineAgentsCache?.agents || []).filter(a => a.status !== 'offline');
+  const seen = new Set(stats.map(s => s.id));
+  machine.forEach(a => {
+    const hid = a.hubId || a.id;
+    if (seen.has(hid)) return;
+    seen.add(hid);
+    stats.push({
+      id: hid,
+      count: 0,
+      lastText: a.detail || 'Detected on this PC',
+      lastTs: machineAgentsCache?.scannedAt || '',
+      machineOnly: true,
+      machineStatus: a.status
+    });
+  });
+  stats.sort((a, b) => (b.count || 0) - (a.count || 0));
   if (!stats.length) {
-    host.innerHTML = '<p class="empty">No agent activity yet.</p>';
+    host.innerHTML = '<p class="empty">No agent activity yet. Open Bridge to scan this PC.</p>';
     return;
   }
   host.innerHTML = stats
     .map(s => {
       const st = agentMeta(s.id);
       const col = st.border || st.color;
+      const machineTag = s.machineOnly
+        ? ' · <span style="opacity:.55;font-size:10px">on PC</span>'
+        : '';
       return (
         '<button type="button" class="agent-row agent-' +
         agentSlug(s.id) +
@@ -3073,13 +3178,14 @@ function renderAgentsLive() {
         '"></span>' +
         '<span class="info"><h4>' +
         esc(agentLabel(s.id)) +
+        machineTag +
         '</h4><p>' +
         esc(s.lastText || '—') +
         '</p></span>' +
         '<span class="stat">' +
-        s.count +
+        (s.count || '—') +
         '<br>' +
-        esc(formatTimeLabel(s.lastTs)) +
+        esc(s.lastTs ? formatTimeLabel(s.lastTs) : 'local') +
         '</span></button>'
       );
     })
@@ -4088,7 +4194,10 @@ async function boot() {
     if (el) el.addEventListener('change', readBridgeUI);
   });
   if ($('btnBridgeRefresh')) {
-    $('btnBridgeRefresh').addEventListener('click', () => renderCursorSessions(true, false));
+    $('btnBridgeRefresh').addEventListener('click', () => {
+      renderCursorSessions(true, false);
+      loadMachineAgents(true);
+    });
   }
   if ($('btnClearCursorImports')) {
     $('btnClearCursorImports').addEventListener('click', () => {
