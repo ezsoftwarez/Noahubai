@@ -16,6 +16,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from agent_detector import count_cursor_sessions, detect_machine_agents
+
 def _resolve_root() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys._MEIPASS)
@@ -438,6 +440,13 @@ class HubHandler(SimpleHTTPRequestHandler):
 
         if path == "/api/bridge/status":
             proj = find_project_slug_for_workspace()
+            qs = parse_qs(parsed.query)
+            force_agents = qs.get("refresh", ["0"])[0] in ("1", "true", "yes")
+            machine = detect_machine_agents(
+                cursor_root=CURSOR_PROJECTS,
+                force=force_agents,
+                session_counter=lambda: count_cursor_sessions(CURSOR_PROJECTS),
+            )
             return json_response(self, {
                 "ok": True,
                 "workspace": str(WORKSPACE),
@@ -446,7 +455,27 @@ class HubHandler(SimpleHTTPRequestHandler):
                 "linkedProject": proj.name if proj else None,
                 "linkedProjectPath": str(proj) if proj else None,
                 "outboxFile": str(OUTBOX_DIR / "cursor-inbox.md"),
+                "machineAgents": {
+                    "presentCount": machine.get("presentCount", 0),
+                    "runningCount": machine.get("runningCount", 0),
+                    "scanMs": machine.get("scanMs"),
+                    "scannedAt": machine.get("scannedAt"),
+                },
             })
+
+        if path == "/api/bridge/agents/machine":
+            qs = parse_qs(parsed.query)
+            force = qs.get("refresh", ["0"])[0] in ("1", "true", "yes")
+            include_offline = qs.get("all", ["0"])[0] in ("1", "true", "yes")
+            return json_response(
+                self,
+                detect_machine_agents(
+                    cursor_root=CURSOR_PROJECTS,
+                    force=force,
+                    include_offline=include_offline,
+                    session_counter=lambda: count_cursor_sessions(CURSOR_PROJECTS),
+                ),
+            )
 
         if path == "/api/bridge/cursor/sessions":
             qs = parse_qs(parsed.query)

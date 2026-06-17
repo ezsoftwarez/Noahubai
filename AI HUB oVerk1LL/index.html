@@ -505,7 +505,10 @@ canvas#bg{will-change:contents}
               <button class="btn btn-ghost" id="btnClearCursorImports" type="button" title="Remove imported Cursor lines from active project">Clear imports</button>
             </div>
             <p style="font-size:11px;opacity:.55;margin:-6px 0 12px;line-height:1.45">Shows this folder first. Green/teal in Activity = your live Hub messages only; gray = imported from Cursor (often old copy-folder chats).</p>
-            <h3 style="font-size:14px;margin-bottom:10px">Cursor Agent sessions (this PC)</h3>
+            <h3 style="font-size:14px;margin-bottom:10px">AI agents on this PC</h3>
+            <p style="font-size:11px;opacity:.5;margin:-4px 0 8px;line-height:1.4">Light scan: running apps, local config folders, and common LLM ports. Cached ~55s.</p>
+            <div id="machineAgentList"><p class="empty">Scanning…</p></div>
+            <h3 style="font-size:14px;margin-bottom:10px;margin-top:16px">Cursor Agent sessions (this PC)</h3>
             <div id="cursorSessionList"><p class="empty">Loading…</p></div>
             <h3 style="font-size:14px;margin-top:16px">Outbox - paste in Cursor (Ctrl+L)</h3>
             <textarea class="outbox-preview" id="outboxPreview" readonly></textarea>
