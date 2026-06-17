@@ -785,6 +785,7 @@
     const state = {
       eventCount: 0,
       socket: null,
+      pingTimer: null,
     };
 
     const agentGrid = document.getElementById("agentGrid");
@@ -898,25 +899,55 @@
 
     function connectSocket() {
       const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-      state.socket = new WebSocket(protocol + "://" + window.location.host + "/ws");
+      const socketUrl = protocol + "://" + window.location.host + "/ws";
+      const socket = new WebSocket(socketUrl);
+      state.socket = socket;
 
-      state.socket.addEventListener("open", () => {
+      socket.addEventListener("open", () => {
+        if (state.socket !== socket) {
+          return;
+        }
         setSocketStatus(true, "Live feed connected");
         appendEvent("WebSocket connected.");
+        if (state.pingTimer) {
+          window.clearInterval(state.pingTimer);
+        }
+        state.pingTimer = window.setInterval(() => {
+          if (state.socket === socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: "ping" }));
+          }
+        }, 15000);
       });
 
-      state.socket.addEventListener("message", (event) => {
+      socket.addEventListener("message", (event) => {
+        if (state.socket !== socket) {
+          return;
+        }
         const data = JSON.parse(event.data);
+        if (data.type === "pong") {
+          return;
+        }
         appendEvent("Event: " + JSON.stringify(data));
       });
 
-      state.socket.addEventListener("close", () => {
+      socket.addEventListener("close", (event) => {
+        if (state.socket !== socket) {
+          return;
+        }
+        if (state.pingTimer) {
+          window.clearInterval(state.pingTimer);
+          state.pingTimer = null;
+        }
+        state.socket = null;
         setSocketStatus(false, "Live feed disconnected");
         appendEvent("WebSocket disconnected. Retrying...");
         window.setTimeout(connectSocket, 2500);
       });
 
-      state.socket.addEventListener("error", () => {
+      socket.addEventListener("error", () => {
+        if (state.socket !== socket) {
+          return;
+        }
         setSocketStatus(false, "Live feed error");
       });
     }
