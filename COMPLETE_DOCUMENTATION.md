@@ -417,10 +417,10 @@ Access advanced settings through API or settings manager.
 #### Fixer Agent Settings
 ```python
 {
-  "auto_fix_enabled": true,
   "max_retry_attempts": 3,
   "fix_timeout_seconds": 120,
-  "safety_checks_enabled": true
+  "learning_mode": "adaptive",
+  "parallel_fix_limit": 3
 }
 ```
 
