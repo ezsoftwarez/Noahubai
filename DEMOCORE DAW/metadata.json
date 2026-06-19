@@ -4,5 +4,5 @@
   "description": "Web desktop OS + NOAHUBAI + AI Hub agent sync",
   "author": "DEMOCORE / Ailabhub",
   "platform": ["web", "windows"],
-  "apps": ["daw", "noahubai", "aihub", "osbridge", "agentsmanager", "terminal", "files", "settings"]
+  "apps": ["daw", "noahubai", "aihub", "aibrowser", "summarizer", "osbridge", "agentsmanager", "terminal", "files", "settings"]
 }

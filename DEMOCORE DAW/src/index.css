@@ -508,3 +508,198 @@ button {
 .bridge-list.files-only button {
   width: 100%;
 }
+
+.ai-browser {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 480px;
+  background: #0a1020;
+}
+
+.ai-browser-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 12, 24, 0.95);
+}
+
+.ai-browser-url {
+  flex: 1;
+  min-width: 160px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #050810;
+  color: #fff;
+}
+
+.ai-browser-select {
+  padding: 6px;
+  border-radius: 8px;
+  background: #050810;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ai-browser-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px 0;
+  overflow-x: auto;
+  background: rgba(8, 12, 24, 0.6);
+}
+
+.ai-browser-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ai-browser-tab.active {
+  border-color: rgba(0, 255, 238, 0.35);
+  background: rgba(0, 255, 238, 0.08);
+}
+
+.ai-browser-tab button {
+  border: none;
+  background: transparent;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.ai-browser-tab .close {
+  padding: 2px 8px;
+  opacity: 0.7;
+}
+
+.ai-browser-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.ai-browser-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-browser-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: #fff;
+}
+
+.ai-browser-fallback {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.ai-browser-sidebar {
+  width: 280px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(5, 8, 16, 0.95);
+}
+
+.ai-browser-sidebar h4 {
+  margin: 0;
+  font-size: 13px;
+  color: #7dfff0;
+}
+
+.ai-browser-hint {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.ai-browser-note,
+.ai-browser-input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #050810;
+  color: #fff;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.ai-browser-input {
+  min-height: 64px;
+}
+
+.ai-browser-chat {
+  flex: 1;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.chat-line {
+  margin-bottom: 8px;
+  padding: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.chat-line.user {
+  border-left: 2px solid #00ffee;
+}
+
+.chat-line.assistant {
+  border-left: 2px solid #6366f1;
+}
+
+.summarizer-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-height: 280px;
+}
+
+.summarizer-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.summarizer-textarea {
+  flex: 1;
+  min-height: 220px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #050810;
+  color: #e8ecf4;
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.summarizer-output {
+  min-height: 220px;
+}
+
+.btn.small {
+  padding: 4px 10px;
+  font-size: 12px;
+}

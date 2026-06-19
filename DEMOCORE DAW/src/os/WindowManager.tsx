@@ -8,6 +8,8 @@ import AgentBuilder from "../apps/AgentBuilder";
 import Terminal from "../apps/Terminal";
 import Files from "../apps/Files";
 import OSBridge from "../apps/OSBridge";
+import AIBrowser from "../apps/AIBrowser";
+import Summarizer from "../apps/Summarizer";
 import Settings from "../apps/Settings";
 import { APPS } from "./apps";
 import type { AppId, WindowState } from "./types";
@@ -40,6 +42,10 @@ function renderApp(appId: AppId): ReactNode {
       return <Files />;
     case "osbridge":
       return <OSBridge />;
+    case "aibrowser":
+      return <AIBrowser />;
+    case "summarizer":
+      return <Summarizer />;
     case "settings":
       return <Settings />;
     default:

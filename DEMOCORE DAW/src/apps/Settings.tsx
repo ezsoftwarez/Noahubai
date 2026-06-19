@@ -17,6 +17,9 @@ export default function Settings() {
           <strong>OS Bridge (WinBridge)</strong> — http://127.0.0.1:9778 (host files)
         </li>
         <li>
+          <strong>AI Browser (native)</strong> — RUN-AI-BROWSER.bat
+        </li>
+        <li>
           <strong>Ollama</strong> — http://127.0.0.1:11434
         </li>
       </ul>

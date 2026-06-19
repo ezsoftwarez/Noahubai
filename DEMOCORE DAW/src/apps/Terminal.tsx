@@ -14,7 +14,7 @@ export default function Terminal() {
     const c = cmd.trim().toLowerCase();
     let out = "";
     if (c === "help") {
-      out = "Commands: help, clear, sync, noahubai, aihub, bridge, daw";
+      out = "Commands: help, clear, sync, noahubai, aihub, bridge, browser, summarize, daw";
     } else if (c === "clear") {
       setLines([]);
       return;
@@ -26,6 +26,10 @@ export default function Terminal() {
       out = "AI Hub → http://127.0.0.1:8765 (Cursor bridge + providers)";
     } else if (c === "bridge" || c === "osbridge") {
       out = "OS Bridge (WinBridge) → http://127.0.0.1:9778 (host files + vault)";
+    } else if (c === "browser" || c === "aibrowser") {
+      out = "AI Browser → DEMOCORE app (web) or RUN-AI-BROWSER.bat (native Steamish + AI)";
+    } else if (c === "summarize" || c === "summarizer") {
+      out = "Summarizer → paste chat or load Cursor sessions via AI Hub Brain";
     } else if (c === "daw") {
       out = "DEMOCORE DAW — audio workstation app loaded.";
     } else if (c) {

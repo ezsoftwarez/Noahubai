@@ -51,6 +51,20 @@ export const APPS: AppDefinition[] = [
     defaultSize: { width: 720, height: 420 },
   },
   {
+    id: "aibrowser",
+    title: "AI Browser",
+    icon: "🌍",
+    description: "Steamish + AI assistant — browse and ask about pages",
+    defaultSize: { width: 1100, height: 720 },
+  },
+  {
+    id: "summarizer",
+    title: "Summarizer",
+    icon: "📝",
+    description: "Summarize chats — paste or Cursor sessions",
+    defaultSize: { width: 900, height: 640 },
+  },
+  {
     id: "osbridge",
     title: "OS Bridge",
     icon: "🌐",

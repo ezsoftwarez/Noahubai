@@ -8,6 +8,8 @@ export type AppId =
   | "terminal"
   | "files"
   | "osbridge"
+  | "aibrowser"
+  | "summarizer"
   | "settings";
 
 export interface AppDefinition {

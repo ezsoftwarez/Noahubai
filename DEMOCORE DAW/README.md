@@ -42,6 +42,8 @@ Csak a web shell: **`dev.cmd`**
 - **Agent Builder** — custom agentek AI Hub Brain-be
 - **AI Hub Brain** — Auto mode Blockbuster model blend
 - **OS Bridge** — host fájlok és mappák betöltése (WinBridge)
+- **AI Browser** — Steamish + AI assistant (web + `RUN-AI-BROWSER.bat`)
+- **Summarizer** — chat összefoglaló (paste / Cursor sessions)
 - **Fájlkezelő** — élő host könyvtár böngészés
 
 ## Szolgáltatások
@@ -52,6 +54,7 @@ Csak a web shell: **`dev.cmd`**
 | NOAHUBAI | 8000 | `python main.py` (repo gyökér) |
 | AI Hub | 8765 | `AI HUB oVerk1LL\RUN-AI-HUB.bat` |
 | OS Bridge | 9778 | `RUN-WINBRIDGE.bat` vagy `python WinBridge.py` |
+| AI Browser (native) | — | `RUN-AI-BROWSER.bat` (PySide6 + Brain) |
 
 ## Agent szinkron + Brain
 

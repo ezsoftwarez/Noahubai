@@ -19,6 +19,8 @@ Or run **`RUN-NOAHUBAI-OG.bat`** directly — starts:
 
 **OS Bridge (host files):** run **`RUN-WINBRIDGE.bat`** or `python WinBridge.py` → http://127.0.0.1:9778
 
+**AI Browser (native):** run **`RUN-AI-BROWSER.bat`** — merged Steamish + AI assistant dock
+
 ### Manual
 
 ```bat
