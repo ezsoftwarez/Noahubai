@@ -375,7 +375,6 @@ Create `.env` file in installation directory:
 # Server
 HOST=0.0.0.0
 PORT=8000
-DEBUG=false
 
 # Agents
 AGENT_TIMEOUT=30
