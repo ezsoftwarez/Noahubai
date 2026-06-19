@@ -3,6 +3,7 @@ export type AppId =
   | "noahubai"
   | "aihub"
   | "agentsmanager"
+  | "agentbuilder"
   | "terminal"
   | "files"
   | "settings";

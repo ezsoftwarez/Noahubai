@@ -74,7 +74,7 @@ export default function Desktop() {
   return (
     <div className="desktop" onClick={() => setStartOpen(false)}>
       <div className="desktop-icons">
-        {APPS.slice(0, 4).map((app) => (
+        {APPS.slice(0, 5).map((app) => (
           <button
             key={app.id}
             type="button"

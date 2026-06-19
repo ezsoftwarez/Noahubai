@@ -18,6 +18,8 @@ from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
+from brain_module import BrainStore, brain_auto_execute, brain_get_config
+
 def _resolve_root() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys._MEIPASS)
@@ -27,6 +29,7 @@ def _resolve_root() -> Path:
 ROOT = _resolve_root()
 BRIDGE_DIR = ROOT / "bridge-data"
 OUTBOX_DIR = BRIDGE_DIR / "outbox"
+BRAIN_STORE = BrainStore(BRIDGE_DIR)
 CURSOR_PROJECTS = Path.home() / ".cursor" / "projects"
 WORKSPACE = ROOT
 SESSION_LIST_TTL = 45.0
@@ -603,6 +606,16 @@ class HubHandler(SimpleHTTPRequestHandler):
                 "agents": agents,
             })
 
+        if path == "/api/brain/config":
+            return json_response(self, brain_get_config(BRAIN_STORE))
+
+        if path == "/api/brain/devices":
+            return json_response(self, BRAIN_STORE.load_devices())
+
+        if path == "/api/brain/agents":
+            cfg = BRAIN_STORE.load_config()
+            return json_response(self, {"ok": True, "agents": cfg.get("customAgents") or []})
+
         return super().do_GET()
 
     def do_POST(self) -> None:
@@ -665,6 +678,29 @@ class HubHandler(SimpleHTTPRequestHandler):
             source = str(body.get("source") or "aihub")
             payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
             return json_response(self, append_agent_event(agent_id, event, source, payload))
+
+        if path == "/api/brain/auto":
+            return json_response(self, brain_auto_execute(BRAIN_STORE, body))
+
+        if path == "/api/brain/devices/upload":
+            devices = body.get("devices")
+            if not isinstance(devices, list):
+                return json_response(self, {"error": "devices array required"}, 400)
+            source = str(body.get("source") or "agents-manager")
+            return json_response(self, {"ok": True, **BRAIN_STORE.upload_devices(devices, source)})
+
+        if path == "/api/brain/agents":
+            agent = body.get("agent")
+            if not isinstance(agent, dict):
+                return json_response(self, {"error": "agent object required"}, 400)
+            saved = BRAIN_STORE.save_custom_agent(agent)
+            return json_response(self, {"ok": True, "agent": saved})
+
+        if path == "/api/brain/config":
+            cfg = body.get("config")
+            if not isinstance(cfg, dict):
+                return json_response(self, {"error": "config object required"}, 400)
+            return json_response(self, {"ok": True, "config": BRAIN_STORE.save_config(cfg)})
 
         return json_response(self, {"error": "not found"}, 404)
 

@@ -3,6 +3,7 @@ import DAW from "../apps/DAW";
 import NoahubAI from "../apps/NoahubAI";
 import AIHub from "../apps/AIHub";
 import AgentsManager from "../apps/AgentsManager";
+import AgentBuilder from "../apps/AgentBuilder";
 import Terminal from "../apps/Terminal";
 import Files from "../apps/Files";
 import Settings from "../apps/Settings";
@@ -27,6 +28,8 @@ function renderApp(appId: AppId): ReactNode {
       return <AIHub />;
     case "agentsmanager":
       return <AgentsManager />;
+    case "agentbuilder":
+      return <AgentBuilder />;
     case "terminal":
       return <Terminal />;
     case "files":

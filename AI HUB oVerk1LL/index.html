@@ -47,6 +47,7 @@ canvas{position:fixed;inset:0;z-index:0}
 .code-bubble-actions .btn-pin-open:hover{border-color:#c4b5fd;background:rgba(115,103,255,.32)}
 .code-bubble-actions .btn-pin-open.pinned-active{border-color:#00ffee;color:#00ffee;background:rgba(0,255,238,.12)}
 #view-bridge.active{display:flex;flex:1;min-height:0}
+#view-brain.active{display:flex;flex:1;min-height:0}
 #view-pictures.active{display:flex;flex:1;min-height:0}
 #view-pictures .panel-body{overflow:auto;max-height:none}
 .pictures-panel{display:flex;flex-direction:column;gap:14px;min-height:0}
@@ -538,6 +539,38 @@ canvas#bg{will-change:contents}
             <div class="pictures-gen-grid" id="picturesGenGrid"></div>
           </div>
         </div>
+        <div class="view" id="view-brain">
+          <div class="panel-head"><h2>AI Hub Brain</h2><span class="badge" id="brainBadge">AUTO</span></div>
+          <div class="panel-body">
+            <p class="bridge-intro">Main orchestrator — routes tasks, runs <strong>Blockbuster</strong> multi-model workers, and <strong>auto-blends</strong> outputs. Synced devices from Agents Manager feed routing context.</p>
+            <div class="agent" id="brainStatusBox">Loading brain…</div>
+            <label style="font-size:12px;display:flex;gap:8px;align-items:center;margin:12px 0">
+              <input type="checkbox" id="brainAutoToggle" checked> <strong>Auto</strong> — balanced quality &amp; speed (blend Blockbuster free models)
+            </label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+              <button class="btn primary" id="btnBrainSyncDevices" type="button">Upload synced devices</button>
+              <button class="btn" id="btnBrainRefresh" type="button">Refresh brain</button>
+              <button class="btn btn-ghost" id="btnBrainTest" type="button">Test auto-blend</button>
+            </div>
+            <h3 style="font-size:14px;margin-bottom:8px">Blockbuster models (OpenRouter free)</h3>
+            <div id="brainModelList" class="agent-live"></div>
+            <h3 style="font-size:14px;margin:16px 0 8px">Synced devices</h3>
+            <div id="brainDeviceList"><p class="empty">No devices — upload from Agents Manager</p></div>
+            <h3 style="font-size:14px;margin:16px 0 8px">Agent Builder</h3>
+            <div class="field"><label>Name</label><input id="builderAgentName" placeholder="My coding agent"></div>
+            <div class="field"><label>Model (Blockbuster)</label>
+              <select id="builderAgentModel">
+                <option value="deepseek/deepseek-chat:free">deepseek-chat:free</option>
+                <option value="meta-llama/llama-3.2-3b-instruct:free">llama-3.2-3b:free</option>
+                <option value="google/gemma-2-9b-it:free">gemma-2-9b:free</option>
+                <option value="mistralai/mistral-7b-instruct:free">mistral-7b:free</option>
+              </select>
+            </div>
+            <div class="field"><label>System prompt</label><textarea id="builderAgentPrompt" rows="3" placeholder="You are a specialized agent…"></textarea></div>
+            <button class="btn primary" id="btnSaveBuiltAgent" type="button" style="margin-bottom:12px">Save agent to brain</button>
+            <div id="brainBuiltAgents"><p class="empty">No custom agents yet</p></div>
+          </div>
+        </div>
         <div class="view" id="view-library">
           <div class="panel-head"><h2 id="libraryTitle">Agents &amp; Files</h2><span class="badge" id="libraryBadge">LIBRARY</span></div>
           <div class="panel-body">
@@ -577,6 +610,10 @@ canvas#bg{will-change:contents}
                 </div>
                 <p style="font-size:11px;opacity:.55;margin-top:8px;line-height:1.4">Whole = full-screen projects first. Odd = classic sidebar menu.</p>
               </div>
+              <h3 style="margin-top:18px">AI Hub Brain</h3>
+              <p class="combo-hint">Auto mode runs Blockbuster free models in parallel and blends answers (multi-provider projects).</p>
+              <label class="rainbow-toggle" style="margin-bottom:10px"><input type="checkbox" id="settingsBrainAuto" checked> Auto-blend (Brain)</label>
+              <button type="button" class="btn btn-ghost btn-mini" id="btnOpenBrain" style="margin-bottom:12px">Open Brain tab</button>
               <h3 style="margin-top:18px">Providers</h3>
               <div class="checks" id="providerChecks"></div>
               <h3 style="margin-top:18px">Combined AIs · rainbow</h3>

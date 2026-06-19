@@ -30,6 +30,13 @@ export const APPS: AppDefinition[] = [
     defaultSize: { width: 900, height: 640 },
   },
   {
+    id: "agentbuilder",
+    title: "Agent Builder",
+    icon: "🛠️",
+    description: "Build custom agents for AI Hub Brain",
+    defaultSize: { width: 820, height: 600 },
+  },
+  {
     id: "terminal",
     title: "Terminál",
     icon: "⌨️",

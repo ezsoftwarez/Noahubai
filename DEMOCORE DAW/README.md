@@ -28,6 +28,8 @@ Csak a web shell: **`dev.cmd`**
 - **NOAHUBAI** — memory / issue / fixer agentek (beágyazott UI)
 - **AI Hub** — Cursor bridge + több AI provider
 - **Agents Manager** — egyesített agent szinkron dashboard
+- **Agent Builder** — custom agentek AI Hub Brain-be
+- **AI Hub Brain** — Auto mode Blockbuster model blend
 
 ## Szolgáltatások
 
@@ -37,11 +39,13 @@ Csak a web shell: **`dev.cmd`**
 | NOAHUBAI | 8000 | `python main.py` (repo gyökér) |
 | AI Hub | 8765 | `AI HUB oVerk1LL\RUN-AI-HUB.bat` |
 
-## Agent szinkron
+## Agent szinkron + Brain
 
-- AI Hub bridge: `GET /api/bridge/agents/sync`
-- DEMOCORE OS 15 mp-enként poll-olja és megjeleníti az **Agents Manager**-ben
-- Noahubai backend agentek (memory, issue, fixer) + AI Hub provider agentek egy listában
+- AI Hub **Brain** tab — fő orchestrator, **Auto** kapcsoló
+- Blockbuster free modellek párhuzamos blend: `deepseek`, `llama`, `gemma`, `mistral`
+- Agents Manager → **Upload to AI Hub Brain** (szinkronizált eszközök)
+- Agent Builder → mentés `/api/brain/agents` végpontra
+- Bridge: `GET /api/brain/config`, `POST /api/brain/auto`, `POST /api/brain/devices/upload`
 
 ## Stack
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { AgentSyncState } from "../os/types";
 import { subscribeAgentSync, syncAllAgents } from "../services/agentSync";
+import { uploadDevicesToBrain } from "../services/noahubaiClient";
 
 export default function AgentsManager() {
   const [sync, setSync] = useState<AgentSyncState | null>(null);
@@ -23,6 +24,19 @@ export default function AgentsManager() {
     democore: sync?.agents.filter((a) => a.source === "democore") ?? [],
   };
 
+  const [uploading, setUploading] = useState(false);
+
+  const handleUploadBrain = async () => {
+    setUploading(true);
+    try {
+      const n = await uploadDevicesToBrain();
+      await syncAllAgents();
+      if (n < 0) alert("Upload failed — start AI Hub bridge (port 8765)");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="app-panel">
       <h2>Agents Manager</h2>
@@ -43,6 +57,9 @@ export default function AgentsManager() {
       <div className="btn-row">
         <button type="button" className="btn" disabled={syncing} onClick={() => void handleSync()}>
           {syncing ? "Syncing…" : "Force sync all agents"}
+        </button>
+        <button type="button" className="btn secondary" disabled={uploading} onClick={() => void handleUploadBrain()}>
+          {uploading ? "Uploading…" : "Upload to AI Hub Brain"}
         </button>
       </div>
 
