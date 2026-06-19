@@ -47,6 +47,7 @@ canvas{position:fixed;inset:0;z-index:0}
 .code-bubble-actions .btn-pin-open:hover{border-color:#c4b5fd;background:rgba(115,103,255,.32)}
 .code-bubble-actions .btn-pin-open.pinned-active{border-color:#00ffee;color:#00ffee;background:rgba(0,255,238,.12)}
 #view-bridge.active{display:flex;flex:1;min-height:0}
+#view-brain.active{display:flex;flex:1;min-height:0}
 #view-pictures.active{display:flex;flex:1;min-height:0}
 #view-pictures .panel-body{overflow:auto;max-height:none}
 .pictures-panel{display:flex;flex-direction:column;gap:14px;min-height:0}
@@ -143,6 +144,10 @@ canvas{position:fixed;inset:0;z-index:0}
 .feed-item.agent-chat.agent-deepseek,.thread-card.agent-chat.agent-deepseek{--agent-color:#7ec8ff;--agent-border:#4d9fff;--agent-bg:rgba(77,159,255,.14)}
 .feed-item.agent-chat.agent-grok,.thread-card.agent-chat.agent-grok{--agent-color:#e5e5e5;--agent-border:#a3a3a3;--agent-bg:rgba(255,255,255,.08)}
 .feed-item.agent-chat.agent-ollama,.thread-card.agent-chat.agent-ollama{--agent-color:#6ee7b7;--agent-border:#00ff88;--agent-bg:rgba(0,255,136,.12)}
+.feed-item.agent-chat.agent-noahubai,.thread-card.agent-chat.agent-noahubai,.feed-item.agent-chat.agent-noahubai-core,.thread-card.agent-chat.agent-noahubai-core{--agent-color:#a5b4fc;--agent-border:#6366f1;--agent-bg:rgba(99,102,241,.18)}
+.feed-item.agent-chat.agent-memory-agent,.thread-card.agent-chat.agent-memory-agent{--agent-color:#a5b4fc;--agent-border:#6366f1;--agent-bg:rgba(99,102,241,.14)}
+.feed-item.agent-chat.agent-issue-agent,.thread-card.agent-chat.agent-issue-agent{--agent-color:#f472b6;--agent-border:#ec4899;--agent-bg:rgba(236,72,153,.14)}
+.feed-item.agent-chat.agent-fixer-agent,.thread-card.agent-chat.agent-fixer-agent{--agent-color:#6ee7b7;--agent-border:#10b981;--agent-bg:rgba(16,185,129,.14)}
 .feed-item.agent-chat.agent-you,.thread-card.agent-chat.user{--agent-color:#7dfff0;--agent-border:#00ffee;--agent-bg:rgba(0,255,238,.1)}
 .feed-item.source-cursor.agent-chat,.thread-card.source-cursor.agent-chat,.feed-item.agent-chat.agent-cursor-import,.thread-card.agent-chat.agent-cursor-import{--agent-color:#9ca3af;--agent-border:#4b5563;--agent-bg:rgba(55,65,81,.38)}
 .feed-item.agent-chat.agent-cursor-agent,.thread-card.agent-chat.agent-cursor-agent{--agent-color:#f5f5f5;--agent-border:#e5e5e5;--agent-bg:linear-gradient(135deg,rgba(255,255,255,.14),rgba(0,0,0,.42))}
@@ -484,7 +489,7 @@ canvas#bg{will-change:contents}
         <div class="view" id="view-bridge">
           <div class="panel-head"><h2>Agent Bridge</h2><span class="badge" id="bridgeBadge">OFFLINE</span></div>
           <div class="panel-body">
-            <p class="bridge-intro">AI Hub sits between <strong>you</strong>, <strong>Cursor Agent</strong> (this PC), and <strong>Ollama / APIs</strong>. Desktop swarm: run <strong>RUN-AI-SWARM.bat</strong> (PyQt6 agent graph).</p>
+            <p class="bridge-intro">AI Hub sits between <strong>you</strong>, <strong>Cursor Agent</strong> (this PC), <strong>NOAHUBAI</strong> (memory / issues / auto-fix on :8000), and <strong>Ollama / APIs</strong>. Desktop swarm: <strong>RUN-AI-SWARM.bat</strong>. DEMOCORE OS: <strong>START-DEMOCORE.bat</strong>.</p>
             <div class="agent" id="bridgeStatusBox">Checking bridge…</div>
             <div class="bridge-links" id="bridgeWorkspaceLinks"></div>
             <div class="field">
@@ -534,6 +539,38 @@ canvas#bg{will-change:contents}
             <div class="pictures-gen-grid" id="picturesGenGrid"></div>
           </div>
         </div>
+        <div class="view" id="view-brain">
+          <div class="panel-head"><h2>AI Hub Brain</h2><span class="badge" id="brainBadge">AUTO</span></div>
+          <div class="panel-body">
+            <p class="bridge-intro">Main orchestrator — routes tasks, runs <strong>Blockbuster</strong> multi-model workers, and <strong>auto-blends</strong> outputs. Synced devices from Agents Manager feed routing context.</p>
+            <div class="agent" id="brainStatusBox">Loading brain…</div>
+            <label style="font-size:12px;display:flex;gap:8px;align-items:center;margin:12px 0">
+              <input type="checkbox" id="brainAutoToggle" checked> <strong>Auto</strong> — balanced quality &amp; speed (blend Blockbuster free models)
+            </label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+              <button class="btn primary" id="btnBrainSyncDevices" type="button">Upload synced devices</button>
+              <button class="btn" id="btnBrainRefresh" type="button">Refresh brain</button>
+              <button class="btn btn-ghost" id="btnBrainTest" type="button">Test auto-blend</button>
+            </div>
+            <h3 style="font-size:14px;margin-bottom:8px">Blockbuster models (OpenRouter free)</h3>
+            <div id="brainModelList" class="agent-live"></div>
+            <h3 style="font-size:14px;margin:16px 0 8px">Synced devices</h3>
+            <div id="brainDeviceList"><p class="empty">No devices — upload from Agents Manager</p></div>
+            <h3 style="font-size:14px;margin:16px 0 8px">Agent Builder</h3>
+            <div class="field"><label>Name</label><input id="builderAgentName" placeholder="My coding agent"></div>
+            <div class="field"><label>Model (Blockbuster)</label>
+              <select id="builderAgentModel">
+                <option value="deepseek/deepseek-chat:free">deepseek-chat:free</option>
+                <option value="meta-llama/llama-3.2-3b-instruct:free">llama-3.2-3b:free</option>
+                <option value="google/gemma-2-9b-it:free">gemma-2-9b:free</option>
+                <option value="mistralai/mistral-7b-instruct:free">mistral-7b:free</option>
+              </select>
+            </div>
+            <div class="field"><label>System prompt</label><textarea id="builderAgentPrompt" rows="3" placeholder="You are a specialized agent…"></textarea></div>
+            <button class="btn primary" id="btnSaveBuiltAgent" type="button" style="margin-bottom:12px">Save agent to brain</button>
+            <div id="brainBuiltAgents"><p class="empty">No custom agents yet</p></div>
+          </div>
+        </div>
         <div class="view" id="view-library">
           <div class="panel-head"><h2 id="libraryTitle">Agents &amp; Files</h2><span class="badge" id="libraryBadge">LIBRARY</span></div>
           <div class="panel-body">
@@ -573,6 +610,10 @@ canvas#bg{will-change:contents}
                 </div>
                 <p style="font-size:11px;opacity:.55;margin-top:8px;line-height:1.4">Whole = full-screen projects first. Odd = classic sidebar menu.</p>
               </div>
+              <h3 style="margin-top:18px">AI Hub Brain</h3>
+              <p class="combo-hint">Auto mode runs Blockbuster free models in parallel and blends answers (multi-provider projects).</p>
+              <label class="rainbow-toggle" style="margin-bottom:10px"><input type="checkbox" id="settingsBrainAuto" checked> Auto-blend (Brain)</label>
+              <button type="button" class="btn btn-ghost btn-mini" id="btnOpenBrain" style="margin-bottom:12px">Open Brain tab</button>
               <h3 style="margin-top:18px">Providers</h3>
               <div class="checks" id="providerChecks"></div>
               <h3 style="margin-top:18px">Combined AIs · rainbow</h3>

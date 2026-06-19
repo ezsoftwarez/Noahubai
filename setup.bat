@@ -81,20 +81,32 @@ echo ✅ Application files copied
 echo.
 echo 🔗 Creating Shortcuts...
 
-REM Create run batch file
-(
-    echo @echo off
-    echo cd /d "%INSTALL_DIR%"
-    echo call venv\Scripts\activate.bat
-    echo python main.py %%*
-    echo pause
-) > "%INSTALL_DIR%\run_noahubai.bat"
-echo ✓ Created run_noahubai.bat
+REM Create run batch file (OG + Bridge)
+if exist "%~dp0RUN-NOAHUBAI-OG.bat" (
+    copy "%~dp0RUN-NOAHUBAI-OG.bat" "%INSTALL_DIR%\RUN-NOAHUBAI-OG.bat" >nul
+    echo ✓ Copied RUN-NOAHUBAI-OG.bat
+) else (
+    (
+        echo @echo off
+        echo cd /d "%INSTALL_DIR%"
+        echo call venv\Scripts\activate.bat
+        echo python main.py %%*
+        echo pause
+    ) > "%INSTALL_DIR%\run_noahubai.bat"
+    echo ✓ Created run_noahubai.bat
+)
 
-REM Create desktop shortcut using PowerShell
-powershell -NoProfile -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Noahubai.lnk'); $Shortcut.TargetPath = '%INSTALL_DIR%\run_noahubai.bat'; $Shortcut.WorkingDirectory = '%INSTALL_DIR%'; $Shortcut.Save()" 2>nul
-if exist "%USERPROFILE%\Desktop\Noahubai.lnk" (
-    echo ✓ Created desktop shortcut
+REM Create desktop shortcut — Noahubai OG + auto Bridge
+set SHORTCUT_SCRIPT=%~dp0CREATE-NOAHUBAI-DESKTOP-SHORTCUT.bat
+if exist "%~dp0RUN-NOAHUBAI-OG.bat" (
+    powershell -NoProfile -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Noahubai OG.lnk'); $Shortcut.TargetPath = '%INSTALL_DIR%\RUN-NOAHUBAI-OG.bat'; $Shortcut.WorkingDirectory = '%INSTALL_DIR%'; $Shortcut.Description = 'Noahubai OG from GitHub — auto-starts AI Hub Bridge'; $Shortcut.Save()" 2>nul
+) else (
+    powershell -NoProfile -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Noahubai.lnk'); $Shortcut.TargetPath = '%INSTALL_DIR%\run_noahubai.bat'; $Shortcut.WorkingDirectory = '%INSTALL_DIR%'; $Shortcut.Save()" 2>nul
+)
+if exist "%USERPROFILE%\Desktop\Noahubai OG.lnk" (
+    echo ✓ Created desktop shortcut: Noahubai OG
+) else if exist "%USERPROFILE%\Desktop\Noahubai.lnk" (
+    echo ✓ Created desktop shortcut: Noahubai
 ) else (
     echo ⚠️  Could not create desktop shortcut (requires Windows 10+)
 )

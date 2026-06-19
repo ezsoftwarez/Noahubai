@@ -2,11 +2,12 @@
 const NAV = [
   { id: 'bridge', icon: '🌉', label: 'Bridge' },
   { id: 'chats', icon: '💬', label: 'Chats' },
+  { id: 'brain', icon: '🧠', label: 'Brain' },
   { id: 'pins', icon: '📌', label: 'Pins' },
   { id: 'agents', icon: '🤖', label: 'Agents' },
   { id: 'files', icon: '📄', label: 'Files' },
   { id: 'codes', icon: '🧊', label: 'Codes' },
-  { id: 'build', icon: '🏗', label: 'Build' },
+  { id: 'build', icon: '🏗', label: 'Builder' },
   { id: 'pictures', icon: '🖼️', label: 'Pictures' }
 ];
 /** Picture / image generator services (opensource-friendly where possible) */
@@ -140,7 +141,8 @@ const LEGACY_PROJECT_FIXES = {
 };
 const ALT_COPY = {
   pins: ['Pins', 'Pinned items appear here when you pin a project (double-click a project card).'],
-  build: ['Build', 'Select the AI Hub project and describe what you want to build. Uses your active provider (Ollama or API).']
+  build: ['Agent Builder', 'Create custom agents with Blockbuster models. Use the Brain tab for the main orchestrator and device upload.'],
+  brain: ['Brain', 'Main AI Hub brain — auto mode blends Blockbuster models.']
 };
 const PICTURES_HISTORY_MAX = 24;
 const CODE_SNIPPETS = {
@@ -175,6 +177,7 @@ let codeStageBlobUrl = null;
 const DEFAULT_PROJECTS = [
   { id: 'p-general', name: 'General', desc: 'Everyday questions, notes, and planning.', meta: 'GPT + Claude', engineCombo: 'general' },
   { id: 'p-aihub', name: 'AI Hub', desc: 'Bridge between you, Cursor, and your AI providers.', meta: 'Multi Provider', engineCombo: 'multi' },
+  { id: 'p-noahubai', name: 'NOAHUBAI', desc: 'Memory, issue tracking, and auto-fix agents synced with AI Hub.', meta: 'NOAHUBAI + Multi', engineCombo: 'multi' },
   { id: 'p-coding', name: 'Coding', desc: 'Build features, fix bugs, review code.', meta: 'Claude + GPT', engineCombo: 'coding' },
   { id: 'p-web', name: 'Web & UI', desc: 'Sites, dashboards, and interface design.', meta: 'Gemini + GPT', engineCombo: 'ui' }
 ];
@@ -198,6 +201,8 @@ const SUMMARIZE_SYSTEM_PROMPT =
   'Be factual — only include what appears in the transcript. Use bullet points. Stay under 700 words unless the thread is very long.';
 const TIMELINE_RENDER_LIMIT = 400;
 const BRIDGE_POLL_MS = 20000;
+const AGENTS_SYNC_MS = 30000;
+let agentsSyncTimer = null;
 const perf = window.HubPerf || { debounce: (fn, ms) => fn, visible: () => true };
 const AGENT_META = {
   you: { label: 'You', color: '#00ffee', border: '#00ffee', bg: 'rgba(0,255,238,.08)' },
@@ -213,6 +218,11 @@ const AGENT_META = {
   assistant: { label: 'Assistant', color: '#7367ff', border: '#7367ff', bg: 'rgba(115,103,255,.1)' },
   system: { label: 'System', color: '#888', border: '#666', bg: 'rgba(255,255,255,.04)' },
   ollama: { label: 'Ollama', color: '#00ff88', border: '#00ff88', bg: 'rgba(0,255,136,.1)' },
+  noahubai: { label: 'NOAHUBAI', color: '#a5b4fc', border: '#6366f1', bg: 'rgba(99,102,241,.18)' },
+  'noahubai-core': { label: 'NOAHUBAI Core', color: '#a5b4fc', border: '#6366f1', bg: 'rgba(99,102,241,.18)' },
+  'memory_agent': { label: 'Memory Agent', color: '#a5b4fc', border: '#6366f1', bg: 'rgba(99,102,241,.14)' },
+  'issue_agent': { label: 'Issue Agent', color: '#f472b6', border: '#ec4899', bg: 'rgba(236,72,153,.14)' },
+  'fixer_agent': { label: 'Fixer Agent', color: '#6ee7b7', border: '#10b981', bg: 'rgba(16,185,129,.14)' },
   combined: {
     label: 'Combined AIs',
     color: '#f5d0fe',
@@ -246,6 +256,9 @@ function loadState() {
       if (!s.ui.libraryFilter) s.ui.libraryFilter = { date: 'all', size: 'all', location: 'all' };
       if (s.ui.showOriginalsInMain === undefined) s.ui.showOriginalsInMain = false;
       if (!s.codes) s.codes = { saveLocation: '', items: [] };
+      if (!s.noahubai) s.noahubai = { online: false, agents: [], updatedAt: 0 };
+      if (!s.brain) s.brain = { devices: [], customAgents: [], lastBlend: null };
+      if (s.settings.brainAuto === undefined) s.settings.brainAuto = true;
       ensurePicturesState(s);
       PROVIDERS.forEach(p => {
         if (s.providers && s.providers[p] === undefined) s.providers[p] = true;
@@ -265,6 +278,7 @@ function loadState() {
       agentColors: {},
       combinedRainbow: true,
       combinedRainbowStops: [...DEFAULT_RAINBOW_STOPS],
+      brainAuto: true,
       connMode: 'ollama',
       ollamaUrl: 'http://127.0.0.1:11434',
       ollamaModel: 'llama3.2',
@@ -282,7 +296,9 @@ function loadState() {
     },
     ui: { chatView: 'timeline', filterAgent: 'all', filterProject: 'all', filterSource: 'all' },
     codes: { saveLocation: '', items: [] },
-    pictures: { prompt: '', activeId: 'pollinations', history: [] }
+    pictures: { prompt: '', activeId: 'pollinations', history: [] },
+    brain: { devices: [], customAgents: [], lastBlend: null },
+    noahubai: { online: false, agents: [], updatedAt: 0 }
   };
 }
 
@@ -1845,6 +1861,220 @@ async function goToBridge() {
   await initBridgePanel(true);
 }
 
+async function syncNoahubaiAgents() {
+  try {
+    const data = await bridgeFetch('/api/bridge/agents/sync');
+    window._agentsSync = data;
+    if (!state.noahubai) state.noahubai = {};
+    state.noahubai.online = !!data.noahubaiOnline;
+    state.noahubai.agents = data.agents || [];
+    state.noahubai.updatedAt = data.updatedAt;
+    saveState();
+    const box = $('bridgeStatusBox');
+    if (box && window._bridgeStatus) {
+      const noah = data.noahubaiOnline
+        ? '<span style="color:#a5b4fc">NOAHUBAI online</span> · ' +
+          (data.agents || []).filter(a => a.source === 'noahubai').length +
+          ' agent(s)'
+        : '<span style="opacity:.65">NOAHUBAI offline</span> (run python main.py :8000)';
+      const extra = box.querySelector('.noahubai-sync-line');
+      if (extra) extra.innerHTML = noah;
+      else {
+        const p = document.createElement('p');
+        p.className = 'noahubai-sync-line';
+        p.style.marginTop = '8px';
+        p.style.fontSize = '12px';
+        p.innerHTML = noah;
+        box.appendChild(p);
+      }
+    }
+    renderAgentsLive();
+    return data;
+  } catch (_) {
+    return null;
+  }
+}
+
+function startAgentsSyncPoll() {
+  if (agentsSyncTimer) clearInterval(agentsSyncTimer);
+  syncNoahubaiAgents().catch(() => {});
+  agentsSyncTimer = setInterval(() => {
+    if (!perf.visible()) return;
+    syncNoahubaiAgents().catch(() => {});
+  }, AGENTS_SYNC_MS);
+}
+
+async function loadBrainConfig() {
+  try {
+    const data = await bridgeFetch('/api/brain/config');
+    if (!state.brain) state.brain = { devices: [], customAgents: [], lastBlend: null };
+    state.brain.config = data.config || {};
+    state.brain.devices = data.devices || [];
+    state.brain.customAgents = (data.config && data.config.customAgents) || [];
+    state.brain.freeModels = data.freeModels || [];
+    if (data.config && data.config.autoMode !== undefined) {
+      state.settings.brainAuto = !!data.config.autoMode;
+    }
+    saveState();
+    renderBrainView();
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function renderBrainView() {
+  const box = $('brainStatusBox');
+  const badge = $('brainBadge');
+  const autoT = $('brainAutoToggle');
+  if (autoT) autoT.checked = state.settings?.brainAuto !== false;
+  if (badge) badge.textContent = state.settings?.brainAuto !== false ? 'AUTO ON' : 'MANUAL';
+  if (box) {
+    const devN = (state.brain?.devices || []).length;
+    const agN = (state.brain?.customAgents || []).length;
+    const modN = (state.brain?.freeModels || []).length;
+    box.innerHTML =
+      '<h3>Brain ready</h3><p>' +
+      devN +
+      ' synced device(s) · ' +
+      agN +
+      ' custom agent(s) · ' +
+      modN +
+      ' Blockbuster models</p>';
+  }
+  const ml = $('brainModelList');
+  if (ml) {
+    const models = state.brain?.freeModels || [];
+    ml.innerHTML = models.length
+      ? models
+          .map(
+            m =>
+              '<div class="agent-row" style="border-left-color:#6366f1"><span class="dot" style="background:#6366f1"></span><span class="info"><h4>' +
+              esc(m) +
+              '</h4><p>OpenRouter free · Blockbuster</p></span></div>'
+          )
+          .join('')
+      : '<p class="empty">No models loaded</p>';
+  }
+  const dl = $('brainDeviceList');
+  if (dl) {
+    const devices = state.brain?.devices || [];
+    dl.innerHTML = devices.length
+      ? devices
+          .map(
+            d =>
+              '<div class="agent-row" style="border-left-color:#00ffee"><span class="dot" style="background:#00ffee"></span><span class="info"><h4>' +
+              esc(d.name || d.id) +
+              '</h4><p>' +
+              esc(d.source || 'device') +
+              ' · ' +
+              esc(d.status || 'synced') +
+              '</p></span></div>'
+          )
+          .join('')
+      : '<p class="empty">No devices — click Upload synced devices</p>';
+  }
+  const bl = $('brainBuiltAgents');
+  if (bl) {
+    const agents = state.brain?.customAgents || [];
+    bl.innerHTML = agents.length
+      ? agents
+          .map(
+            a =>
+              '<div class="agent-row" style="border-left-color:#c084fc"><span class="dot" style="background:#c084fc"></span><span class="info"><h4>' +
+              esc(a.name || a.id) +
+              '</h4><p>' +
+              esc(a.model || '') +
+              '</p></span></div>'
+          )
+          .join('')
+      : '<p class="empty">No custom agents yet</p>';
+  }
+}
+
+async function uploadSyncedDevicesToBrain() {
+  try {
+    const sync = await bridgeFetch('/api/bridge/agents/sync');
+    const agents = sync.agents || state.noahubai?.agents || [];
+    const devices = agents.map(a => ({
+      id: a.id,
+      name: a.name,
+      source: a.source,
+      status: a.status,
+      color: a.color,
+      description: a.description
+    }));
+    const data = await bridgeFetch('/api/brain/devices/upload', {
+      method: 'POST',
+      body: JSON.stringify({ devices, source: 'agents-manager' })
+    });
+    state.brain = state.brain || {};
+    state.brain.devices = data.devices || devices;
+    saveState();
+    renderBrainView();
+    setStatus('Uploaded ' + (data.devices || devices).length + ' synced devices to brain', true);
+    return data;
+  } catch (e) {
+    setStatus(e.message, false);
+    return null;
+  }
+}
+
+async function saveBuiltAgent() {
+  const name = ($('builderAgentName')?.value || '').trim();
+  const model = $('builderAgentModel')?.value || 'deepseek/deepseek-chat:free';
+  const prompt = ($('builderAgentPrompt')?.value || '').trim();
+  if (!name) {
+    setStatus('Agent name required', false);
+    return;
+  }
+  try {
+    const data = await bridgeFetch('/api/brain/agents', {
+      method: 'POST',
+      body: JSON.stringify({
+        agent: { name, model, systemPrompt: prompt, source: 'agent-builder' }
+      })
+    });
+    await loadBrainConfig();
+    setStatus('Saved agent: ' + name, true);
+    if ($('builderAgentName')) $('builderAgentName').value = '';
+    if ($('builderAgentPrompt')) $('builderAgentPrompt').value = '';
+  } catch (e) {
+    setStatus(e.message, false);
+  }
+}
+
+async function brainAutoBlend(userText, history) {
+  readSettings();
+  const combo = getProjectEngineCombo();
+  const payload = {
+    prompt: userText,
+    history: history.map(m => ({ role: m.role, content: m.text })),
+    engineCombo: combo.id,
+    auto: state.settings?.brainAuto !== false,
+    connMode: state.settings.connMode,
+    apiBase: state.settings.apiBase,
+    apiKey: state.settings.apiKey,
+    ollamaUrl: state.settings.ollamaUrl,
+    ollamaModel: state.settings.ollamaModel,
+    syncedAgents: state.noahubai?.agents || [],
+    codingQuality: state.brain?.config?.codingQuality || 50,
+    textLength: state.brain?.config?.textLength || 50
+  };
+  const data = await bridgeFetch('/api/brain/auto', { method: 'POST', body: JSON.stringify(payload) });
+  if (!data.ok) throw new Error(data.error || 'Brain auto-blend failed');
+  state.brain = state.brain || {};
+  state.brain.lastBlend = { route: data.route, models: data.models, ts: Date.now() };
+  saveState();
+  return data;
+}
+
+function shouldUseBrainAuto() {
+  if (state.settings?.brainAuto === false) return false;
+  const combo = getProjectEngineCombo();
+  return (combo.providers && combo.providers.length >= 2) || combo.id === 'multi';
+}
+
 async function refreshBridgeStatus() {
   const box = $('bridgeStatusBox');
   const badge = $('bridgeBadge');
@@ -1855,6 +2085,7 @@ async function refreshBridgeStatus() {
     box.innerHTML =
       '<h3>Bridge online</h3><p>Cursor transcripts on this PC. Use workspace links below and session list.</p>';
     paintBridgeWorkspaceLinks(st);
+    await syncNoahubaiAgents();
     if (badge) {
       badge.textContent = 'BRIDGE ON';
       badge.style.borderColor = 'rgba(0,255,238,.4)';
@@ -2311,15 +2542,17 @@ function switchNav(id) {
 
   const isChats = id === 'chats';
   const isBridge = id === 'bridge';
+  const isBrain = id === 'brain';
   const isLibrary = isLibraryNav(id);
   const isCodes = id === 'codes';
   const isPictures = id === 'pictures';
   if ($('view-code-stage')) $('view-code-stage').classList.toggle('active', isCodes);
   $('view-chats').classList.toggle('active', isChats);
   if ($('view-bridge')) $('view-bridge').classList.toggle('active', isBridge);
+  if ($('view-brain')) $('view-brain').classList.toggle('active', isBrain);
   if ($('view-library')) $('view-library').classList.toggle('active', isLibrary);
   if ($('view-pictures')) $('view-pictures').classList.toggle('active', isPictures);
-  $('view-alt').classList.toggle('active', !isChats && !isBridge && !isLibrary && !isCodes && !isPictures);
+  $('view-alt').classList.toggle('active', !isChats && !isBridge && !isBrain && !isLibrary && !isCodes && !isPictures);
   const contentEl = document.querySelector('.content');
   if (contentEl) {
     contentEl.classList.toggle('bridge-focus', isBridge);
@@ -2328,7 +2561,7 @@ function switchNav(id) {
   }
   if (isBridge && getStartMode() === 'whole') enterWorkspace();
 
-  const showAgents = id !== 'codes' && !isBridge && !isPictures;
+  const showAgents = id !== 'codes' && !isBridge && !isBrain && !isPictures;
   $('view-right-main').classList.toggle('active', showAgents);
   $('view-codes').classList.toggle('active', id === 'codes');
 
@@ -2345,6 +2578,8 @@ function switchNav(id) {
     loadPinsFromFolder().catch(() => {});
   } else if (id === 'pictures') {
     renderPicturesView();
+  } else if (id === 'brain') {
+    loadBrainConfig().catch(() => renderBrainView());
   } else if (ALT_COPY[id]) {
     $('altTitle').textContent = ALT_COPY[id][0];
     $('altBody').textContent = ALT_COPY[id][1];
@@ -3245,6 +3480,7 @@ function renderProviderUI() {
   $('apiBase').value = s.apiBase || 'https://api.openai.com/v1';
   $('apiKey').value = s.apiKey || '';
   $('apiModel').value = s.apiModel || 'gpt-4o-mini';
+  if ($('settingsBrainAuto')) $('settingsBrainAuto').checked = s.brainAuto !== false;
   toggleConnFields();
   renderEngineComboPicker();
   renderCombinedRainbowUI();
@@ -3378,6 +3614,7 @@ function readSettings() {
   state.settings.apiBase = $('apiBase').value.replace(/\/$/, '');
   state.settings.apiKey = $('apiKey').value;
   state.settings.apiModel = $('apiModel').value.trim();
+  if ($('settingsBrainAuto')) state.settings.brainAuto = $('settingsBrainAuto').checked;
   saveState();
 }
 
@@ -3444,14 +3681,24 @@ async function sendMessage() {
         b.relayHub !== false
           ? project.messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(0, -1)
           : [];
-      const reply = await callAI(text, hist, route);
+      let reply;
+      let agentBrand = replyAgentId(route);
+      if (shouldUseBrainAuto()) {
+        setStatus('Brain auto-blending Blockbuster models…', null);
+        const brain = await brainAutoBlend(text, hist);
+        reply = brain.blended;
+        route = 'combined';
+        agentBrand = 'combined';
+        parts.push('BRAIN AUTO (' + (brain.models || []).length + ' models)');
+      } else {
+        reply = await callAI(text, hist, route);
+        parts.push(route.toUpperCase());
+      }
       if (b.relayHub !== false) {
-        const brand = replyAgentId(route);
         project.messages.push(
-          makeMessage('assistant', reply, { agent: brand, provider: route, source: 'hub' })
+          makeMessage('assistant', reply, { agent: agentBrand, provider: route, source: 'hub' })
         );
       }
-      parts.push(route.toUpperCase());
     } catch (e) {
       if (b.relayHub !== false) {
         project.messages.push(
@@ -4113,6 +4360,38 @@ async function boot() {
 
   ensureBridgeState();
   startBridgePoll();
+  startAgentsSyncPoll();
+  loadBrainConfig().catch(() => {});
+
+  if ($('brainAutoToggle')) {
+    $('brainAutoToggle').addEventListener('change', () => {
+      state.settings.brainAuto = $('brainAutoToggle').checked;
+      saveState();
+      renderBrainView();
+    });
+  }
+  if ($('btnBrainSyncDevices')) $('btnBrainSyncDevices').addEventListener('click', () => uploadSyncedDevicesToBrain());
+  if ($('btnBrainRefresh')) $('btnBrainRefresh').addEventListener('click', () => loadBrainConfig());
+  if ($('btnSaveBuiltAgent')) $('btnSaveBuiltAgent').addEventListener('click', () => saveBuiltAgent());
+  if ($('btnBrainTest')) {
+    $('btnBrainTest').addEventListener('click', async () => {
+      try {
+        const r = await brainAutoBlend('Say hello in one sentence.', []);
+        setStatus('Brain test OK · route: ' + (r.route || 'auto'), true);
+      } catch (e) {
+        setStatus(e.message, false);
+      }
+    });
+  }
+  if ($('btnOpenBrain')) $('btnOpenBrain').addEventListener('click', () => switchNav('brain'));
+  if ($('settingsBrainAuto')) {
+    $('settingsBrainAuto').addEventListener('change', () => {
+      state.settings.brainAuto = $('settingsBrainAuto').checked;
+      if ($('brainAutoToggle')) $('brainAutoToggle').checked = state.settings.brainAuto;
+      saveState();
+      renderBrainView();
+    });
+  }
 
   testConnection();
   initParticles();

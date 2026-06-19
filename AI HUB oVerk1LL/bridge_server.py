@@ -15,6 +15,10 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+
+from brain_module import BrainStore, brain_auto_execute, brain_get_config
 
 def _resolve_root() -> Path:
     if getattr(sys, "frozen", False):
@@ -25,6 +29,7 @@ def _resolve_root() -> Path:
 ROOT = _resolve_root()
 BRIDGE_DIR = ROOT / "bridge-data"
 OUTBOX_DIR = BRIDGE_DIR / "outbox"
+BRAIN_STORE = BrainStore(BRIDGE_DIR)
 CURSOR_PROJECTS = Path.home() / ".cursor" / "projects"
 WORKSPACE = ROOT
 SESSION_LIST_TTL = 45.0
@@ -417,6 +422,112 @@ def write_cursor_outbox(text: str, project_name: str = "AI Hub") -> dict[str, An
     return {"ok": True, "file": str(fname), "ts": ts}
 
 
+AGENTS_SYNC_PATH = BRIDGE_DIR / "agents-sync.json"
+NOAHUBAI_URL = os.environ.get("NOAHUBAI_URL", "http://127.0.0.1:8000").rstrip("/")
+
+AIHUB_STATIC_AGENTS: list[dict[str, Any]] = [
+    {"id": "gpt", "name": "GPT", "source": "aihub", "status": "online", "color": "#4ade80", "description": "OpenAI"},
+    {"id": "claude", "name": "Claude", "source": "aihub", "status": "online", "color": "#f97316", "description": "Anthropic"},
+    {"id": "codex", "name": "Codex", "source": "aihub", "status": "online", "color": "#15803d", "description": "OpenAI Codex"},
+    {"id": "cursor-agent", "name": "Cursor Agent", "source": "aihub", "status": "online", "color": "#e5e5e5", "description": "Cursor bridge"},
+    {"id": "ollama", "name": "Ollama", "source": "aihub", "status": "offline", "color": "#00ff88", "description": "Local models"},
+]
+
+NOAHUBAI_COLORS = {
+    "memory_agent": "#6366f1",
+    "issue_agent": "#ec4899",
+    "fixer_agent": "#10b981",
+}
+
+
+def _fetch_json_url(url: str, timeout: float = 4.0) -> dict[str, Any] | None:
+    try:
+        req = Request(url, headers={"User-Agent": "AIHubBridge/1.0"})
+        with urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except (URLError, HTTPError, OSError, json.JSONDecodeError, TimeoutError):
+        return None
+
+
+def load_agents_sync() -> dict[str, Any]:
+    if AGENTS_SYNC_PATH.is_file():
+        try:
+            return json.loads(AGENTS_SYNC_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            pass
+    return {"version": 1, "events": [], "agents": []}
+
+
+def save_agents_sync(data: dict[str, Any]) -> None:
+    AGENTS_SYNC_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def build_unified_agents_sync() -> dict[str, Any]:
+    now = int(time.time() * 1000)
+    health = _fetch_json_url(f"{NOAHUBAI_URL}/api/health")
+    agents_payload = _fetch_json_url(f"{NOAHUBAI_URL}/api/agents") or {}
+    noahubai_online = bool(health and health.get("status") in ("healthy", "ok"))
+
+    noah_agents: list[dict[str, Any]] = []
+    for item in agents_payload.get("agents") or []:
+        name = str(item.get("name") or "")
+        if not name:
+            continue
+        noah_agents.append({
+            "id": f"noahubai-{name}",
+            "name": name.replace("_", " "),
+            "source": "noahubai",
+            "status": "online" if item.get("status") in ("running", "active", "initialized") or item.get("state") in ("running", "ready", "active") else "offline",
+            "color": NOAHUBAI_COLORS.get(name, "#7367ff"),
+            "description": "Noahubai backend agent",
+            "lastSync": now,
+        })
+
+    if noahubai_online:
+        noah_agents.append({
+            "id": "noahubai-core",
+            "name": "NOAHUBAI Core",
+            "source": "noahubai",
+            "status": "online",
+            "color": "#6366f1",
+            "description": "Memory, issue tracking, auto-fix",
+            "lastSync": now,
+        })
+
+    hub_agents = [{**a, "lastSync": now} for a in AIHUB_STATIC_AGENTS]
+    merged = noah_agents + hub_agents
+    stored = load_agents_sync()
+    payload = {
+        "version": 1,
+        "updatedAt": now,
+        "noahubaiOnline": noahubai_online,
+        "aihubOnline": True,
+        "noahubaiUrl": NOAHUBAI_URL,
+        "agents": merged,
+        "recentEvents": (stored.get("events") or [])[-20:],
+    }
+    save_agents_sync({**stored, **payload})
+    return payload
+
+
+def append_agent_event(agent_id: str, event: str, source: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    stored = load_agents_sync()
+    events = list(stored.get("events") or [])
+    entry = {
+        "ts": int(time.time() * 1000),
+        "agentId": agent_id,
+        "event": event,
+        "source": source,
+        "payload": payload or {},
+    }
+    events.append(entry)
+    stored["events"] = events[-100:]
+    save_agents_sync(stored)
+    sync = build_unified_agents_sync()
+    sync["event"] = entry
+    return sync
+
+
 class HubHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -482,6 +593,29 @@ class HubHandler(SimpleHTTPRequestHandler):
             store = read_pins_store()
             return json_response(self, {"ok": True, **store})
 
+        if path == "/api/bridge/agents/sync":
+            return json_response(self, build_unified_agents_sync())
+
+        if path == "/api/bridge/noahubai/status":
+            health = _fetch_json_url(f"{NOAHUBAI_URL}/api/health")
+            agents = _fetch_json_url(f"{NOAHUBAI_URL}/api/agents")
+            return json_response(self, {
+                "ok": bool(health),
+                "noahubaiUrl": NOAHUBAI_URL,
+                "health": health,
+                "agents": agents,
+            })
+
+        if path == "/api/brain/config":
+            return json_response(self, brain_get_config(BRAIN_STORE))
+
+        if path == "/api/brain/devices":
+            return json_response(self, BRAIN_STORE.load_devices())
+
+        if path == "/api/brain/agents":
+            cfg = BRAIN_STORE.load_config()
+            return json_response(self, {"ok": True, "agents": cfg.get("customAgents") or []})
+
         return super().do_GET()
 
     def do_POST(self) -> None:
@@ -537,6 +671,36 @@ class HubHandler(SimpleHTTPRequestHandler):
                 cfg["saveLocation"] = str(resolve_codes_dir())
             save_codes_config(cfg)
             return json_response(self, {"ok": True, "saveLocation": cfg["saveLocation"]})
+
+        if path == "/api/bridge/agents/event":
+            agent_id = str(body.get("agentId") or "unknown")
+            event = str(body.get("event") or "sync")
+            source = str(body.get("source") or "aihub")
+            payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
+            return json_response(self, append_agent_event(agent_id, event, source, payload))
+
+        if path == "/api/brain/auto":
+            return json_response(self, brain_auto_execute(BRAIN_STORE, body))
+
+        if path == "/api/brain/devices/upload":
+            devices = body.get("devices")
+            if not isinstance(devices, list):
+                return json_response(self, {"error": "devices array required"}, 400)
+            source = str(body.get("source") or "agents-manager")
+            return json_response(self, {"ok": True, **BRAIN_STORE.upload_devices(devices, source)})
+
+        if path == "/api/brain/agents":
+            agent = body.get("agent")
+            if not isinstance(agent, dict):
+                return json_response(self, {"error": "agent object required"}, 400)
+            saved = BRAIN_STORE.save_custom_agent(agent)
+            return json_response(self, {"ok": True, "agent": saved})
+
+        if path == "/api/brain/config":
+            cfg = body.get("config")
+            if not isinstance(cfg, dict):
+                return json_response(self, {"error": "config object required"}, 400)
+            return json_response(self, {"ok": True, "config": BRAIN_STORE.save_config(cfg)})
 
         return json_response(self, {"error": "not found"}, 404)
 
