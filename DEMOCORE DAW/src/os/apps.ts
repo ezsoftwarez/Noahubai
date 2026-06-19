@@ -51,10 +51,17 @@ export const APPS: AppDefinition[] = [
     defaultSize: { width: 720, height: 420 },
   },
   {
+    id: "osbridge",
+    title: "OS Bridge",
+    icon: "🌐",
+    description: "WinBridge — load host files and folders",
+    defaultSize: { width: 960, height: 620 },
+  },
+  {
     id: "files",
     title: "Fájlkezelő",
     icon: "📁",
-    description: "Project files",
+    description: "Host filesystem via WinBridge",
     defaultSize: { width: 680, height: 480 },
   },
   {

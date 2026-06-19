@@ -11,7 +11,10 @@ export default function Settings() {
           <strong>NOAHUBAI</strong> — http://127.0.0.1:8000
         </li>
         <li>
-          <strong>AI Hub Bridge</strong> — http://127.0.0.1:8765
+          <strong>AI Hub Bridge</strong> — http://127.0.0.1:8765 (Cursor / agents)
+        </li>
+        <li>
+          <strong>OS Bridge (WinBridge)</strong> — http://127.0.0.1:9778 (host files)
         </li>
         <li>
           <strong>Ollama</strong> — http://127.0.0.1:11434

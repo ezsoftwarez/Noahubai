@@ -7,6 +7,7 @@ export type AppId =
   | "agentbuilder"
   | "terminal"
   | "files"
+  | "osbridge"
   | "settings";
 
 export interface AppDefinition {

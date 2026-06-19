@@ -415,3 +415,96 @@ button {
     width: 100%;
   }
 }
+
+.bridge-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr 220px;
+  gap: 10px;
+  min-height: 320px;
+  margin-top: 8px;
+}
+
+.bridge-pane {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bridge-pane h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.65;
+}
+
+.bridge-path {
+  font-size: 11px;
+  opacity: 0.7;
+  word-break: break-all;
+  margin-bottom: 8px;
+}
+
+.bridge-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  flex: 1;
+}
+
+.bridge-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.bridge-list button {
+  flex: 1;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+  color: #e8ecf4;
+  font-size: 12px;
+}
+
+.bridge-list button:hover,
+.bridge-list button.active {
+  border-color: rgba(0, 255, 238, 0.3);
+  background: rgba(0, 255, 238, 0.08);
+}
+
+.bridge-list button small {
+  opacity: 0.55;
+}
+
+.bridge-list .btn.small {
+  flex: 0;
+  padding: 2px 8px;
+  font-size: 14px;
+}
+
+.bridge-preview {
+  flex: 1;
+  margin: 0;
+  padding: 8px;
+  border-radius: 8px;
+  background: #050810;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-family: Consolas, monospace;
+}
+
+.bridge-list.files-only button {
+  width: 100%;
+}

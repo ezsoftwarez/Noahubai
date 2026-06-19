@@ -17,6 +17,8 @@ Or run **`RUN-NOAHUBAI-OG.bat`** directly — starts:
 - AI Hub Bridge → http://127.0.0.1:8765
 - Noahubai OG (Windows 7 shell) → http://127.0.0.1:8000
 
+**OS Bridge (host files):** run **`RUN-WINBRIDGE.bat`** or `python WinBridge.py` → http://127.0.0.1:9778
+
 ### Manual
 
 ```bat

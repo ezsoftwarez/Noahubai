@@ -14,7 +14,7 @@ export default function Terminal() {
     const c = cmd.trim().toLowerCase();
     let out = "";
     if (c === "help") {
-      out = "Commands: help, clear, sync, noahubai, aihub, daw";
+      out = "Commands: help, clear, sync, noahubai, aihub, bridge, daw";
     } else if (c === "clear") {
       setLines([]);
       return;
@@ -24,6 +24,8 @@ export default function Terminal() {
       out = "NOAHUBAI → http://127.0.0.1:8000 (memory, issues, fixer agents)";
     } else if (c === "aihub") {
       out = "AI Hub → http://127.0.0.1:8765 (Cursor bridge + providers)";
+    } else if (c === "bridge" || c === "osbridge") {
+      out = "OS Bridge (WinBridge) → http://127.0.0.1:9778 (host files + vault)";
     } else if (c === "daw") {
       out = "DEMOCORE DAW — audio workstation app loaded.";
     } else if (c) {

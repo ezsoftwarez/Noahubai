@@ -27,6 +27,15 @@ if exist "%ROOT%\AI HUB oVerk1LL\bridge_server.py" (
   echo [skip] AI HUB oVerk1LL not found
 )
 
+REM --- OS Bridge / WinBridge (port 9778) ---
+if exist "%ROOT%\WinBridge.py" (
+  echo Starting WinBridge OS Bridge on :9778...
+  start "WinBridge" cmd /k "cd /d \"%ROOT%\" && python WinBridge.py --no-ui"
+  timeout /t 2 /nobreak >nul
+) else (
+  echo [skip] WinBridge.py not found
+)
+
 REM --- DEMOCORE OS web shell (port 5173) ---
 cd /d "%~dp0"
 echo Starting DEMOCORE OS on :5173...
@@ -44,4 +53,5 @@ echo All services starting. Keep the terminal windows open.
 echo   DEMOCORE OS  -> http://127.0.0.1:5173
 echo   NOAHUBAI     -> http://127.0.0.1:8000
 echo   AI Hub       -> http://127.0.0.1:8765
+echo   OS Bridge    -> http://127.0.0.1:9778
 pause

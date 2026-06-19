@@ -74,7 +74,7 @@ export default function Desktop() {
   return (
     <div className="desktop" onClick={() => setStartOpen(false)}>
       <div className="desktop-icons">
-        {APPS.filter((a) => ["daw", "noahubai-og", "noahubai", "aihub", "agentsmanager"].includes(a.id)).map(
+        {APPS.filter((a) => ["daw", "noahubai-og", "noahubai", "aihub", "osbridge", "agentsmanager"].includes(a.id)).map(
           (app) => (
           <button
             key={app.id}

@@ -7,6 +7,7 @@ import AgentsManager from "../apps/AgentsManager";
 import AgentBuilder from "../apps/AgentBuilder";
 import Terminal from "../apps/Terminal";
 import Files from "../apps/Files";
+import OSBridge from "../apps/OSBridge";
 import Settings from "../apps/Settings";
 import { APPS } from "./apps";
 import type { AppId, WindowState } from "./types";
@@ -37,6 +38,8 @@ function renderApp(appId: AppId): ReactNode {
       return <Terminal />;
     case "files":
       return <Files />;
+    case "osbridge":
+      return <OSBridge />;
     case "settings":
       return <Settings />;
     default:

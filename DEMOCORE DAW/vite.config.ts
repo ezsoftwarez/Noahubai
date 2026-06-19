@@ -22,6 +22,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/aihub-bridge/, ""),
       },
+      "/win-bridge": {
+        target: "http://127.0.0.1:9778",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/win-bridge/, ""),
+      },
     },
   },
 });

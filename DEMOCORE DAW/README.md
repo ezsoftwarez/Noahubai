@@ -25,7 +25,10 @@ GitHub: https://github.com/ezsoftwarez/Noahubai
 Ez elindítja:
 1. **NOAHUBAI** — `http://127.0.0.1:8000`
 2. **AI Hub Bridge** — `http://127.0.0.1:8765`
-3. **DEMOCORE OS** — `http://127.0.0.1:5173`
+3. **OS Bridge (WinBridge)** — `http://127.0.0.1:9778`
+4. **DEMOCORE OS** — `http://127.0.0.1:5173`
+
+**OS Bridge külön:** `RUN-WINBRIDGE.bat` (repo gyökér) — API + asztali UI fájl/betöltéshez
 
 Csak a web shell: **`dev.cmd`**
 
@@ -38,6 +41,8 @@ Csak a web shell: **`dev.cmd`**
 - **Agents Manager** — egyesített agent szinkron dashboard
 - **Agent Builder** — custom agentek AI Hub Brain-be
 - **AI Hub Brain** — Auto mode Blockbuster model blend
+- **OS Bridge** — host fájlok és mappák betöltése (WinBridge)
+- **Fájlkezelő** — élő host könyvtár böngészés
 
 ## Szolgáltatások
 
@@ -46,6 +51,7 @@ Csak a web shell: **`dev.cmd`**
 | DEMOCORE OS | 5173 | `dev.cmd` vagy `npm dev` |
 | NOAHUBAI | 8000 | `python main.py` (repo gyökér) |
 | AI Hub | 8765 | `AI HUB oVerk1LL\RUN-AI-HUB.bat` |
+| OS Bridge | 9778 | `RUN-WINBRIDGE.bat` vagy `python WinBridge.py` |
 
 ## Agent szinkron + Brain
 
