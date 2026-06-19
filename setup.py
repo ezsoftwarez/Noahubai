@@ -199,7 +199,7 @@ pause
         
         # Create start menu shortcut batch
         start_menu_batch = self.install_dir / "create_shortcuts.bat"
-        start_menu_content = f"""@echo off
+        start_menu_content = rf"""@echo off
 setlocal
 
 set SCRIPT_DIR=%~dp0
