@@ -1,0 +1,8 @@
+{
+  "name": "brOS / DEMOCORE OS",
+  "version": "1.0.0",
+  "description": "Web desktop OS + NOAHUBAI + AI Hub agent sync",
+  "author": "DEMOCORE / Ailabhub",
+  "platform": ["web", "windows"],
+  "apps": ["daw", "noahubai", "aihub", "agentsmanager", "terminal", "files", "settings"]
+}

@@ -175,6 +175,7 @@ let codeStageBlobUrl = null;
 const DEFAULT_PROJECTS = [
   { id: 'p-general', name: 'General', desc: 'Everyday questions, notes, and planning.', meta: 'GPT + Claude', engineCombo: 'general' },
   { id: 'p-aihub', name: 'AI Hub', desc: 'Bridge between you, Cursor, and your AI providers.', meta: 'Multi Provider', engineCombo: 'multi' },
+  { id: 'p-noahubai', name: 'NOAHUBAI', desc: 'Memory, issue tracking, and auto-fix agents synced with AI Hub.', meta: 'NOAHUBAI + Multi', engineCombo: 'multi' },
   { id: 'p-coding', name: 'Coding', desc: 'Build features, fix bugs, review code.', meta: 'Claude + GPT', engineCombo: 'coding' },
   { id: 'p-web', name: 'Web & UI', desc: 'Sites, dashboards, and interface design.', meta: 'Gemini + GPT', engineCombo: 'ui' }
 ];
@@ -198,6 +199,8 @@ const SUMMARIZE_SYSTEM_PROMPT =
   'Be factual — only include what appears in the transcript. Use bullet points. Stay under 700 words unless the thread is very long.';
 const TIMELINE_RENDER_LIMIT = 400;
 const BRIDGE_POLL_MS = 20000;
+const AGENTS_SYNC_MS = 30000;
+let agentsSyncTimer = null;
 const perf = window.HubPerf || { debounce: (fn, ms) => fn, visible: () => true };
 const AGENT_META = {
   you: { label: 'You', color: '#00ffee', border: '#00ffee', bg: 'rgba(0,255,238,.08)' },
@@ -213,6 +216,11 @@ const AGENT_META = {
   assistant: { label: 'Assistant', color: '#7367ff', border: '#7367ff', bg: 'rgba(115,103,255,.1)' },
   system: { label: 'System', color: '#888', border: '#666', bg: 'rgba(255,255,255,.04)' },
   ollama: { label: 'Ollama', color: '#00ff88', border: '#00ff88', bg: 'rgba(0,255,136,.1)' },
+  noahubai: { label: 'NOAHUBAI', color: '#a5b4fc', border: '#6366f1', bg: 'rgba(99,102,241,.18)' },
+  'noahubai-core': { label: 'NOAHUBAI Core', color: '#a5b4fc', border: '#6366f1', bg: 'rgba(99,102,241,.18)' },
+  'memory_agent': { label: 'Memory Agent', color: '#a5b4fc', border: '#6366f1', bg: 'rgba(99,102,241,.14)' },
+  'issue_agent': { label: 'Issue Agent', color: '#f472b6', border: '#ec4899', bg: 'rgba(236,72,153,.14)' },
+  'fixer_agent': { label: 'Fixer Agent', color: '#6ee7b7', border: '#10b981', bg: 'rgba(16,185,129,.14)' },
   combined: {
     label: 'Combined AIs',
     color: '#f5d0fe',
@@ -246,6 +254,7 @@ function loadState() {
       if (!s.ui.libraryFilter) s.ui.libraryFilter = { date: 'all', size: 'all', location: 'all' };
       if (s.ui.showOriginalsInMain === undefined) s.ui.showOriginalsInMain = false;
       if (!s.codes) s.codes = { saveLocation: '', items: [] };
+      if (!s.noahubai) s.noahubai = { online: false, agents: [], updatedAt: 0 };
       ensurePicturesState(s);
       PROVIDERS.forEach(p => {
         if (s.providers && s.providers[p] === undefined) s.providers[p] = true;
@@ -1845,6 +1854,49 @@ async function goToBridge() {
   await initBridgePanel(true);
 }
 
+async function syncNoahubaiAgents() {
+  try {
+    const data = await bridgeFetch('/api/bridge/agents/sync');
+    window._agentsSync = data;
+    if (!state.noahubai) state.noahubai = {};
+    state.noahubai.online = !!data.noahubaiOnline;
+    state.noahubai.agents = data.agents || [];
+    state.noahubai.updatedAt = data.updatedAt;
+    saveState();
+    const box = $('bridgeStatusBox');
+    if (box && window._bridgeStatus) {
+      const noah = data.noahubaiOnline
+        ? '<span style="color:#a5b4fc">NOAHUBAI online</span> · ' +
+          (data.agents || []).filter(a => a.source === 'noahubai').length +
+          ' agent(s)'
+        : '<span style="opacity:.65">NOAHUBAI offline</span> (run python main.py :8000)';
+      const extra = box.querySelector('.noahubai-sync-line');
+      if (extra) extra.innerHTML = noah;
+      else {
+        const p = document.createElement('p');
+        p.className = 'noahubai-sync-line';
+        p.style.marginTop = '8px';
+        p.style.fontSize = '12px';
+        p.innerHTML = noah;
+        box.appendChild(p);
+      }
+    }
+    renderAgentsLive();
+    return data;
+  } catch (_) {
+    return null;
+  }
+}
+
+function startAgentsSyncPoll() {
+  if (agentsSyncTimer) clearInterval(agentsSyncTimer);
+  syncNoahubaiAgents().catch(() => {});
+  agentsSyncTimer = setInterval(() => {
+    if (!perf.visible()) return;
+    syncNoahubaiAgents().catch(() => {});
+  }, AGENTS_SYNC_MS);
+}
+
 async function refreshBridgeStatus() {
   const box = $('bridgeStatusBox');
   const badge = $('bridgeBadge');
@@ -1855,6 +1907,7 @@ async function refreshBridgeStatus() {
     box.innerHTML =
       '<h3>Bridge online</h3><p>Cursor transcripts on this PC. Use workspace links below and session list.</p>';
     paintBridgeWorkspaceLinks(st);
+    await syncNoahubaiAgents();
     if (badge) {
       badge.textContent = 'BRIDGE ON';
       badge.style.borderColor = 'rgba(0,255,238,.4)';
@@ -4113,6 +4166,7 @@ async function boot() {
 
   ensureBridgeState();
   startBridgePoll();
+  startAgentsSyncPoll();
 
   testConnection();
   initParticles();

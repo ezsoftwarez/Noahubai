@@ -143,6 +143,10 @@ canvas{position:fixed;inset:0;z-index:0}
 .feed-item.agent-chat.agent-deepseek,.thread-card.agent-chat.agent-deepseek{--agent-color:#7ec8ff;--agent-border:#4d9fff;--agent-bg:rgba(77,159,255,.14)}
 .feed-item.agent-chat.agent-grok,.thread-card.agent-chat.agent-grok{--agent-color:#e5e5e5;--agent-border:#a3a3a3;--agent-bg:rgba(255,255,255,.08)}
 .feed-item.agent-chat.agent-ollama,.thread-card.agent-chat.agent-ollama{--agent-color:#6ee7b7;--agent-border:#00ff88;--agent-bg:rgba(0,255,136,.12)}
+.feed-item.agent-chat.agent-noahubai,.thread-card.agent-chat.agent-noahubai,.feed-item.agent-chat.agent-noahubai-core,.thread-card.agent-chat.agent-noahubai-core{--agent-color:#a5b4fc;--agent-border:#6366f1;--agent-bg:rgba(99,102,241,.18)}
+.feed-item.agent-chat.agent-memory-agent,.thread-card.agent-chat.agent-memory-agent{--agent-color:#a5b4fc;--agent-border:#6366f1;--agent-bg:rgba(99,102,241,.14)}
+.feed-item.agent-chat.agent-issue-agent,.thread-card.agent-chat.agent-issue-agent{--agent-color:#f472b6;--agent-border:#ec4899;--agent-bg:rgba(236,72,153,.14)}
+.feed-item.agent-chat.agent-fixer-agent,.thread-card.agent-chat.agent-fixer-agent{--agent-color:#6ee7b7;--agent-border:#10b981;--agent-bg:rgba(16,185,129,.14)}
 .feed-item.agent-chat.agent-you,.thread-card.agent-chat.user{--agent-color:#7dfff0;--agent-border:#00ffee;--agent-bg:rgba(0,255,238,.1)}
 .feed-item.source-cursor.agent-chat,.thread-card.source-cursor.agent-chat,.feed-item.agent-chat.agent-cursor-import,.thread-card.agent-chat.agent-cursor-import{--agent-color:#9ca3af;--agent-border:#4b5563;--agent-bg:rgba(55,65,81,.38)}
 .feed-item.agent-chat.agent-cursor-agent,.thread-card.agent-chat.agent-cursor-agent{--agent-color:#f5f5f5;--agent-border:#e5e5e5;--agent-bg:linear-gradient(135deg,rgba(255,255,255,.14),rgba(0,0,0,.42))}
@@ -484,7 +488,7 @@ canvas#bg{will-change:contents}
         <div class="view" id="view-bridge">
           <div class="panel-head"><h2>Agent Bridge</h2><span class="badge" id="bridgeBadge">OFFLINE</span></div>
           <div class="panel-body">
-            <p class="bridge-intro">AI Hub sits between <strong>you</strong>, <strong>Cursor Agent</strong> (this PC), and <strong>Ollama / APIs</strong>. Desktop swarm: run <strong>RUN-AI-SWARM.bat</strong> (PyQt6 agent graph).</p>
+            <p class="bridge-intro">AI Hub sits between <strong>you</strong>, <strong>Cursor Agent</strong> (this PC), <strong>NOAHUBAI</strong> (memory / issues / auto-fix on :8000), and <strong>Ollama / APIs</strong>. Desktop swarm: <strong>RUN-AI-SWARM.bat</strong>. DEMOCORE OS: <strong>START-DEMOCORE.bat</strong>.</p>
             <div class="agent" id="bridgeStatusBox">Checking bridge…</div>
             <div class="bridge-links" id="bridgeWorkspaceLinks"></div>
             <div class="field">
