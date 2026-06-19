@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import DAW from "../apps/DAW";
 import NoahubAI from "../apps/NoahubAI";
+import NoahubaiOG from "../apps/NoahubaiOG";
 import AIHub from "../apps/AIHub";
 import AgentsManager from "../apps/AgentsManager";
 import AgentBuilder from "../apps/AgentBuilder";
@@ -24,6 +25,8 @@ function renderApp(appId: AppId): ReactNode {
       return <DAW />;
     case "noahubai":
       return <NoahubAI />;
+    case "noahubai-og":
+      return <NoahubaiOG />;
     case "aihub":
       return <AIHub />;
     case "agentsmanager":

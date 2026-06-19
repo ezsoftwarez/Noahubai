@@ -1,6 +1,7 @@
 export type AppId =
   | "daw"
   | "noahubai"
+  | "noahubai-og"
   | "aihub"
   | "agentsmanager"
   | "agentbuilder"

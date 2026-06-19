@@ -14,6 +14,14 @@ A repo gyökérben maradjanak a Noahubai és AI Hub fájlok (`main.py`, `AI HUB 
 
 Dupla katt: **`START-DEMOCORE.bat`**
 
+**Noahubai OG** (eredeti GitHub app + Bridge automatikusan):
+
+1. Egyszer futtasd: **`CREATE-NOAHUBAI-DESKTOP-SHORTCUT.bat`** (repo gyökér) — asztali ikon: **Noahubai OG**
+2. Vagy: **`RUN-NOAHUBAI-OG.bat`** — Bridge (:8765) + Noahubai (:8000) együtt indul
+3. DEMOCORE mappából: **`NOAHUBAI-OG.bat`**
+
+GitHub: https://github.com/ezsoftwarez/Noahubai
+
 Ez elindítja:
 1. **NOAHUBAI** — `http://127.0.0.1:8000`
 2. **AI Hub Bridge** — `http://127.0.0.1:8765`

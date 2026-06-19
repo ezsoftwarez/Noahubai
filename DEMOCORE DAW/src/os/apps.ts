@@ -16,6 +16,13 @@ export const APPS: AppDefinition[] = [
     defaultSize: { width: 1100, height: 720 },
   },
   {
+    id: "noahubai-og",
+    title: "Noahubai OG",
+    icon: "🪟",
+    description: "Original GitHub app — Windows 7 desktop shell",
+    defaultSize: { width: 1200, height: 780 },
+  },
+  {
     id: "aihub",
     title: "AI Hub",
     icon: "🌉",

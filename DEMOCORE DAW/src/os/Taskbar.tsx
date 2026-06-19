@@ -35,8 +35,8 @@ export default function Taskbar({ windows, activeId, onStart, onFocus, onOpen }:
           </button>
         ))}
       </div>
-      <button type="button" className="taskbar-app" onClick={() => onOpen("noahubai")} title="NOAHUBAI">
-        🧠
+      <button type="button" className="taskbar-app" onClick={() => onOpen("noahubai-og")} title="Noahubai OG">
+        🪟
       </button>
       <button type="button" className="taskbar-app" onClick={() => onOpen("aihub")} title="AI Hub">
         🌉
