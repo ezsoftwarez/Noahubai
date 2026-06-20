@@ -16,6 +16,10 @@ from backend.entitlements import (
 def test_free_tier_default(monkeypatch):
     monkeypatch.delenv("NOAHUBAI_LICENSE_KEY", raising=False)
     monkeypatch.delenv("NOAHUBAI_PLAN", raising=False)
+    monkeypatch.setattr(
+        "backend.entitlements._load_persisted_license",
+        lambda: None,
+    )
     svc = EntitlementService()
     svc._cached = None
     ctx = svc.resolve(force_refresh=True)

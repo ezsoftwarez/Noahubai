@@ -97,61 +97,23 @@ class MonetizationAgent(BaseAgent):
 
     async def get_status(self) -> Dict[str, Any]:
         """Current plan, features, and pricing summary."""
-        ctx = entitlement_service.resolve()
-        plan = ctx.plan.value
-        return {
-            "plan": plan,
-            "plan_summary": PLAN_SUMMARY.get(plan, {}),
-            "features": sorted(ctx.features),
-            "feature_count": len(ctx.features),
-            "license_id": ctx.license_id,
-            "activated_at": ctx.activated_at,
-            "strict_mode": ctx.strict_mode,
-            "available_plans": [t.value for t in PlanTier],
-        }
+        return _status_from_ctx(entitlement_service.resolve())
 
     async def get_recommendations(self) -> Dict[str, Any]:
         """Upsell suggestions for features not on the current plan."""
-        ctx = entitlement_service.resolve()
-        missing: List[Dict[str, str]] = []
-
-        for feature_id, hint in UPGRADE_HINTS.items():
-            if feature_id not in ctx.features:
-                missing.append(
-                    {
-                        "feature_id": feature_id,
-                        "title": hint["title"],
-                        "benefit": hint["benefit"],
-                        "required_plan": hint["plan"],
-                    }
-                )
-
-        next_plan = None
-        if ctx.plan == PlanTier.FREE:
-            next_plan = PlanTier.PRO.value
-        elif ctx.plan == PlanTier.PRO:
-            next_plan = PlanTier.TEAM.value
-
-        return {
-            "current_plan": ctx.plan.value,
-            "next_suggested_plan": next_plan,
-            "recommendations": missing[:6],
-            "total_locked_features": len(missing),
-        }
+        return _recommendations_from_ctx(entitlement_service.resolve())
 
     async def get_pricing(self) -> Dict[str, Any]:
         """Public pricing matrix for UI display."""
+        return _cached_pricing()
+
+    async def get_summary(self) -> Dict[str, Any]:
+        """Single-call bundle for desktop UI (one entitlement resolve)."""
+        ctx = entitlement_service.resolve()
         return {
-            "plans": {
-                tier.value: {
-                    **PLAN_SUMMARY[tier.value],
-                    "feature_count": len(FEATURE_MATRIX[tier]),
-                    "highlights": _plan_highlights(tier),
-                }
-                for tier in PlanTier
-            },
-            "model": "open_core_byok",
-            "documentation": "docs/PRICING.md",
+            "status": _status_from_ctx(ctx),
+            "recommendations": _recommendations_from_ctx(ctx),
+            "pricing": _cached_pricing(),
         }
 
     async def activate_license(self, license_key: str) -> Dict[str, Any]:
@@ -187,3 +149,65 @@ def _plan_highlights(tier: PlanTier) -> List[str]:
         "Team knowledge base",
         "Managed sync / relay",
     ]
+
+
+_PRICING_CACHE: Dict[str, Any] | None = None
+
+
+def _cached_pricing() -> Dict[str, Any]:
+    global _PRICING_CACHE
+    if _PRICING_CACHE is None:
+        _PRICING_CACHE = {
+            "plans": {
+                tier.value: {
+                    **PLAN_SUMMARY[tier.value],
+                    "feature_count": len(FEATURE_MATRIX[tier]),
+                    "highlights": _plan_highlights(tier),
+                }
+                for tier in PlanTier
+            },
+            "model": "open_core_byok",
+            "documentation": "docs/PRICING.md",
+        }
+    return _PRICING_CACHE
+
+
+def _recommendations_from_ctx(ctx) -> Dict[str, Any]:
+    missing: List[Dict[str, str]] = []
+    for feature_id, hint in UPGRADE_HINTS.items():
+        if feature_id not in ctx.features:
+            missing.append(
+                {
+                    "feature_id": feature_id,
+                    "title": hint["title"],
+                    "benefit": hint["benefit"],
+                    "required_plan": hint["plan"],
+                }
+            )
+
+    next_plan = None
+    if ctx.plan == PlanTier.FREE:
+        next_plan = PlanTier.PRO.value
+    elif ctx.plan == PlanTier.PRO:
+        next_plan = PlanTier.TEAM.value
+
+    return {
+        "current_plan": ctx.plan.value,
+        "next_suggested_plan": next_plan,
+        "recommendations": missing[:6],
+        "total_locked_features": len(missing),
+    }
+
+
+def _status_from_ctx(ctx) -> Dict[str, Any]:
+    plan = ctx.plan.value
+    return {
+        "plan": plan,
+        "plan_summary": PLAN_SUMMARY.get(plan, {}),
+        "features": sorted(ctx.features),
+        "feature_count": len(ctx.features),
+        "license_id": ctx.license_id,
+        "activated_at": ctx.activated_at,
+        "strict_mode": ctx.strict_mode,
+        "available_plans": [t.value for t in PlanTier],
+    }

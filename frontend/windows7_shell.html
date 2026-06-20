@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/7.css">
+  <link rel="prefetch" href="/api/desktop/summary">
   <style>
     :root {
       --taskbar-height: 44px;
@@ -121,6 +122,8 @@
       overflow: hidden;
       backdrop-filter: blur(7px);
       scroll-margin-top: 24px;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 420px;
     }
 
     .window-shell.collapsed .window-body {
@@ -1003,7 +1006,12 @@
       pingTimer: null,
       currentPlan: "free",
       allFeatures: new Set(),
+      eventLines: [],
+      refreshTimer: null,
+      monetizationLoaded: false,
     };
+
+    const MAX_CONSOLE_LINES = 120;
 
     const agentGrid = document.getElementById("agentGrid");
     const eventConsole = document.getElementById("eventConsole");
@@ -1073,19 +1081,34 @@
     }
 
     function appendEvent(text) {
-      if (eventConsole.querySelector(".events-empty")) {
-        eventConsole.textContent = "";
-      }
-
       const now = new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
       });
-      eventConsole.textContent += "[" + now + "] " + text + "\n";
+      state.eventLines.push("[" + now + "] " + text);
+      if (state.eventLines.length > MAX_CONSOLE_LINES) {
+        state.eventLines.splice(0, state.eventLines.length - MAX_CONSOLE_LINES);
+      }
+      eventConsole.textContent = state.eventLines.join("\n");
       eventConsole.scrollTop = eventConsole.scrollHeight;
       state.eventCount += 1;
       liveEvents.textContent = String(state.eventCount);
+    }
+
+    function formatWsEvent(data) {
+      if (data.type === "connected") return "WebSocket connected.";
+      if (data.type === "pong") return null;
+      if (data.event_name === "system.startup_complete") {
+        return "System startup complete (" + (data.data && data.data.agents) + " agents).";
+      }
+      if (data.event_name === "monetization.license_activated") {
+        return "License activated: " + (data.data && data.data.plan) + " plan.";
+      }
+      if (data.event_name) {
+        return data.event_name + ": " + JSON.stringify(data.data || {});
+      }
+      return "Event: " + JSON.stringify(data);
     }
 
     function focusWindow(targetId) {
@@ -1140,12 +1163,6 @@
       monPlanTagline.textContent = (status.plan_summary && status.plan_summary.tagline) || "";
 
       state.allFeatures = new Set(status.features || []);
-      const proFeatures = new Set([
-        "pro.advanced_memory_search",
-        "pro.background_automation",
-        "pro.local_analytics",
-        "pro.audit_trail",
-      ]);
 
       const displayFeatures = [...state.allFeatures]
         .filter((f) => !f.startsWith("core.") || f === "core.cursor_bridge")
@@ -1179,18 +1196,58 @@
       `).join("");
     }
 
-    async function loadMonetization() {
+    function renderMonetizationFromSummary(mon) {
+      if (!mon) return;
+      renderMonetization(mon.status, mon.recommendations, mon.pricing);
+      state.monetizationLoaded = true;
+    }
+
+    async function loadMonetization(force) {
+      if (state.monetizationLoaded && !force) return;
       try {
-        const [status, recommendations, pricing] = await Promise.all([
-          fetchJson("/api/monetization/status"),
-          fetchJson("/api/monetization/recommendations"),
-          fetchJson("/api/monetization/pricing"),
-        ]);
-        renderMonetization(status, recommendations, pricing);
+        const mon = await fetchJson("/api/monetization/summary");
+        renderMonetizationFromSummary(mon);
       } catch (error) {
         monPlanTagline.textContent = "Could not load plan: " + error.message;
         appendEvent("Monetization load failed: " + error.message);
       }
+    }
+
+    function applyDesktopSummary(summary) {
+      const health = summary.health || {};
+      const stats = summary.statistics || {};
+      const issueList = summary.issues || [];
+
+      setBackendStatus(health.status === "healthy", "Backend " + (health.status || "unknown"));
+      healthyAgents.textContent = String(health.healthy_agents || 0);
+      healthyAgentsSub.textContent =
+        (health.healthy_agents || 0) + " of " + (health.total_agents || 0) + " healthy";
+      openIssues.textContent = String(
+        issueList.filter((issue) => issue.status !== "resolved").length
+      );
+      successRate.textContent = Math.round((stats.success_rate || 0) * 100) + "%";
+      renderAgents(summary.agents || [], summary.agent_health || {});
+      renderMonetizationFromSummary(summary.monetization);
+    }
+
+    async function loadDesktopSummary(options) {
+      const silent = options && options.silent;
+      try {
+        const summary = await fetchJson("/api/desktop/summary");
+        applyDesktopSummary(summary);
+        if (!silent) appendEvent("Desktop refresh completed.");
+      } catch (error) {
+        setBackendStatus(false, "Backend unavailable");
+        appendEvent("Refresh failed: " + error.message);
+      }
+    }
+
+    function scheduleRefresh() {
+      if (state.refreshTimer) window.clearTimeout(state.refreshTimer);
+      state.refreshTimer = window.setTimeout(() => {
+        state.refreshTimer = null;
+        loadDesktopSummary();
+      }, 250);
     }
 
     async function activateLicense() {
@@ -1212,39 +1269,14 @@
         licenseMessage.textContent = "Activated " + (result.entitlements && result.entitlements.plan || "plan") + " successfully.";
         licenseMessage.className = "license-msg ok";
         licenseInput.value = "";
-        appendEvent("License activated: " + JSON.stringify(result.entitlements));
-        await loadMonetization();
-        await loadDashboard();
+        appendEvent("License activated: " + (result.entitlements && result.entitlements.plan || "plan"));
+        state.monetizationLoaded = false;
+        await loadDesktopSummary({ silent: true });
       } catch (error) {
         licenseMessage.textContent = error.message;
         licenseMessage.className = "license-msg err";
       } finally {
         activateButton.disabled = false;
-      }
-    }
-
-    async function loadDashboard() {
-      try {
-        const [health, status, issues] = await Promise.all([
-          fetchJson("/api/health"),
-          fetchJson("/api/status"),
-          fetchJson("/api/issues"),
-        ]);
-
-        const totalAgents = health.system ? health.system.total_agents : 0;
-        const healthyCount = health.system ? health.system.healthy_agents : 0;
-
-        setBackendStatus(health.status === "healthy", "Backend " + health.status);
-        healthyAgents.textContent = String(healthyCount);
-        healthyAgentsSub.textContent = healthyCount + " of " + totalAgents + " healthy";
-        const issueList = issues.issues || [];
-        openIssues.textContent = String(issueList.filter((issue) => issue.status !== "resolved").length);
-        successRate.textContent = Math.round((status.statistics.success_rate || 0) * 100) + "%";
-        renderAgents(status.agents || [], status.health || {});
-        appendEvent("Desktop refresh completed.");
-      } catch (error) {
-        setBackendStatus(false, "Backend unavailable");
-        appendEvent("Refresh failed: " + error.message);
       }
     }
 
@@ -1269,7 +1301,9 @@
       socket.addEventListener("open", () => {
         if (state.socket !== socket) return;
         setSocketStatus(true, "Live feed connected");
-        appendEvent("WebSocket connected.");
+        if (state.eventLines.length === 0) {
+          appendEvent("WebSocket connected.");
+        }
         if (state.pingTimer) window.clearInterval(state.pingTimer);
         state.pingTimer = window.setInterval(() => {
           if (state.socket === socket && socket.readyState === WebSocket.OPEN) {
@@ -1289,9 +1323,11 @@
         }
         if (data.type === "pong") return;
         if (data.event_name === "monetization.license_activated") {
-          loadMonetization();
+          state.monetizationLoaded = false;
+          loadDesktopSummary({ silent: true });
         }
-        appendEvent("Event: " + JSON.stringify(data));
+        const line = formatWsEvent(data);
+        if (line) appendEvent(line);
       });
 
       socket.addEventListener("close", () => {
@@ -1352,6 +1388,9 @@
         if (!target || !target.startsWith("window-")) return;
         if (el.tagName === "A") event.preventDefault();
         focusWindow(target);
+        if (target === "window-monetization" && !state.monetizationLoaded) {
+          loadMonetization(true);
+        }
       });
       if (el.classList.contains("desktop-icon")) {
         el.addEventListener("keydown", (event) => {
@@ -1363,10 +1402,7 @@
       }
     });
 
-    refreshButton.addEventListener("click", () => {
-      loadDashboard();
-      loadMonetization();
-    });
+    refreshButton.addEventListener("click", scheduleRefresh);
     analyzeButton.addEventListener("click", analyzeIssues);
     activateButton.addEventListener("click", activateLicense);
     licenseInput.addEventListener("keydown", (event) => {
@@ -1376,8 +1412,7 @@
     wireWindowControls();
     updateClock();
     window.setInterval(updateClock, 1000);
-    loadDashboard();
-    loadMonetization();
+    loadDesktopSummary({ silent: true });
     connectSocket();
   </script>
 </body>

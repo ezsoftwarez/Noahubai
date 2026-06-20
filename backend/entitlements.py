@@ -104,6 +104,10 @@ ROUTE_FEATURES: Dict[str, str] = {
     "/api/team/sync": "team.managed_sync",
 }
 
+_ROUTE_PREFIXES: tuple[tuple[str, str], ...] = tuple(
+    sorted(ROUTE_FEATURES.items(), key=lambda item: len(item[0]), reverse=True)
+)
+
 
 @dataclass
 class EntitlementContext:
@@ -227,8 +231,8 @@ class EntitlementService:
                 plan, license_id, _ = parsed
                 activated_at = datetime.now(timezone.utc).isoformat()
 
-        # 3) Persisted license file (unless env key wins)
-        if not env_key:
+        # 3) Persisted license file (when env does not override)
+        if not env_key and not env_plan:
             persisted = _load_persisted_license()
             if persisted and persisted.get("license_key"):
                 parsed = parse_license_key(persisted["license_key"])
@@ -266,11 +270,11 @@ class EntitlementService:
         return self.resolve(force_refresh=True)
 
     def required_feature_for_path(self, path: str) -> Optional[str]:
-        # Exact match first, then prefix for nested routes
         if path in ROUTE_FEATURES:
             return ROUTE_FEATURES[path]
-        for route_prefix, feature in ROUTE_FEATURES.items():
-            if path.startswith(route_prefix.rstrip("/") + "/"):
+        for route_prefix, feature in _ROUTE_PREFIXES:
+            prefix = route_prefix.rstrip("/") + "/"
+            if path.startswith(prefix):
                 return feature
         return None
 

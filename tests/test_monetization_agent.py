@@ -2,7 +2,7 @@
 import pytest
 
 from agents.monetization_agent import MonetizationAgent, PLAN_SUMMARY
-from backend.entitlements import PlanTier, generate_license_key
+from backend.entitlements import PlanTier, generate_license_key, entitlement_service
 from core import EventBus, StateManager
 
 
@@ -15,7 +15,14 @@ def monetization_agent():
 
 
 @pytest.mark.asyncio
-async def test_get_status_default(monetization_agent):
+async def test_get_status_default(monetization_agent, monkeypatch):
+    monkeypatch.setattr(
+        "backend.entitlements._load_persisted_license",
+        lambda: None,
+    )
+    monkeypatch.delenv("NOAHUBAI_LICENSE_KEY", raising=False)
+    monkeypatch.delenv("NOAHUBAI_PLAN", raising=False)
+    entitlement_service._cached = None
     agent, _, _ = monetization_agent
     await agent.initialize()
     status = await agent.get_status()
@@ -25,7 +32,14 @@ async def test_get_status_default(monetization_agent):
 
 
 @pytest.mark.asyncio
-async def test_get_recommendations_suggests_upgrades(monetization_agent):
+async def test_get_recommendations_suggests_upgrades(monetization_agent, monkeypatch):
+    monkeypatch.setattr(
+        "backend.entitlements._load_persisted_license",
+        lambda: None,
+    )
+    monkeypatch.delenv("NOAHUBAI_LICENSE_KEY", raising=False)
+    monkeypatch.delenv("NOAHUBAI_PLAN", raising=False)
+    entitlement_service._cached = None
     agent, _, _ = monetization_agent
     await agent.initialize()
     recs = await agent.get_recommendations()
@@ -45,6 +59,26 @@ async def test_get_pricing_includes_all_plans(monetization_agent):
 
 
 @pytest.mark.asyncio
+async def test_get_summary_single_resolve(monetization_agent, monkeypatch):
+    agent, _, _ = monetization_agent
+    await agent.initialize()
+    calls = {"n": 0}
+    original = __import__("backend.entitlements", fromlist=["entitlement_service"]).entitlement_service.resolve
+
+    def counting_resolve(force_refresh=False):
+        calls["n"] += 1
+        return original(force_refresh=force_refresh)
+
+    monkeypatch.setattr(
+        "backend.entitlements.entitlement_service.resolve",
+        counting_resolve,
+    )
+    summary = await agent.get_summary()
+    assert "status" in summary and "recommendations" in summary and "pricing" in summary
+    assert calls["n"] == 1
+
+
+@pytest.mark.asyncio
 async def test_activate_license(monetization_agent, monkeypatch):
     agent, _, _ = monetization_agent
     await agent.initialize()
@@ -52,3 +86,4 @@ async def test_activate_license(monetization_agent, monkeypatch):
     result = await agent.activate_license(key)
     assert result["status"] == "activated"
     assert result["entitlements"]["plan"] == "pro"
+

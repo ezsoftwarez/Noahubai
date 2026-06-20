@@ -26,6 +26,18 @@ from backend.middleware import EntitlementMiddleware
 
 logger = logging.getLogger(__name__)
 FRONTEND_FILE = Path(__file__).resolve().parent.parent / "frontend" / "windows7_shell.html"
+_FRONTEND_HTML: str | None = None
+_FRONTEND_MTIME: float | None = None
+
+
+def _get_frontend_html() -> str:
+    """Load shell HTML once; refresh only when the file changes."""
+    global _FRONTEND_HTML, _FRONTEND_MTIME
+    mtime = FRONTEND_FILE.stat().st_mtime
+    if _FRONTEND_HTML is None or _FRONTEND_MTIME != mtime:
+        _FRONTEND_HTML = FRONTEND_FILE.read_text(encoding="utf-8")
+        _FRONTEND_MTIME = mtime
+    return _FRONTEND_HTML
 
 # Global instances
 event_bus: EventBus = None
@@ -296,6 +308,12 @@ async def monetization_pricing():
     return await agent_registry.call_agent("monetization_agent", "get_pricing")
 
 
+@app.get("/api/monetization/summary")
+async def monetization_summary():
+    """Bundled monetization payload for desktop UI (single agent call)."""
+    return await agent_registry.call_agent("monetization_agent", "get_summary")
+
+
 @app.post("/api/monetization/activate")
 async def monetization_activate(request: Dict[str, Any]):
     """Activate license via monetization agent."""
@@ -345,6 +363,36 @@ async def system_status():
         "agents": agent_registry.list_agents(),
         "statistics": stats,
         "health": agent_health,
+    }
+
+
+@app.get("/api/desktop/summary")
+async def desktop_summary():
+    """
+    Single payload for the desktop shell — avoids duplicate health/issue fetches.
+    """
+    stats = await state_manager.get_statistics()
+    agent_health = await agent_registry.health_check_all()
+    issues_result, monetization = await asyncio.gather(
+        agent_registry.call_agent("issue_agent", "list_issues"),
+        agent_registry.call_agent("monetization_agent", "get_summary"),
+    )
+
+    healthy_count = sum(1 for s in agent_health.values() if s.get("healthy"))
+    total_agents = len(agent_health)
+
+    return {
+        "timestamp": datetime.utcnow().isoformat(),
+        "health": {
+            "status": "healthy" if healthy_count == total_agents else "degraded",
+            "total_agents": total_agents,
+            "healthy_agents": healthy_count,
+        },
+        "agents": agent_registry.list_agents(),
+        "agent_health": agent_health,
+        "statistics": stats,
+        "issues": issues_result.get("issues", []),
+        "monetization": monetization,
     }
 
 
@@ -623,7 +671,7 @@ async def general_exception_handler(request, exc):
 async def root():
     """Serve the Windows 7 style Noahubai shell."""
     return HTMLResponse(
-        content=FRONTEND_FILE.read_text(encoding="utf-8"),
+        content=_get_frontend_html(),
         headers={"Cache-Control": "no-cache"},
     )
 
