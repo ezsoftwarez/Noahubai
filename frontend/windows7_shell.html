@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/7.css">
+  <link rel="prefetch" href="/api/desktop/summary">
   <style>
     :root {
       --taskbar-height: 44px;
@@ -28,7 +29,8 @@
     body {
       margin: 0;
       min-height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
       font-family: "Segoe UI", Arial, sans-serif;
       background:
         radial-gradient(circle at top left, rgba(255, 255, 255, 0.22), transparent 28%),
@@ -75,6 +77,7 @@
       color: white;
       text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
       user-select: none;
+      cursor: pointer;
     }
 
     .desktop-icon.selected {
@@ -118,6 +121,18 @@
         inset 0 1px 0 var(--desktop-highlight);
       overflow: hidden;
       backdrop-filter: blur(7px);
+      scroll-margin-top: 24px;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 420px;
+    }
+
+    .window-shell.collapsed .window-body {
+      display: none;
+    }
+
+    .window-shell.highlight {
+      outline: 2px solid rgba(255, 255, 255, 0.45);
+      outline-offset: 2px;
     }
 
     .window-shell .window {
@@ -401,6 +416,7 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
       font-size: 12px;
       font-weight: 600;
+      cursor: pointer;
     }
 
     .task-button.active {
@@ -530,6 +546,164 @@
       color: #4d627b;
     }
 
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .plan-badge.free {
+      background: rgba(255, 255, 255, 0.15);
+      color: #e8f4ff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .plan-badge.pro {
+      background: linear-gradient(180deg, #ffd86b, #d4a017);
+      color: #3d2e00;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+
+    .plan-badge.team {
+      background: linear-gradient(180deg, #c4b5fd, #7c3aed);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+
+    .monetization-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .monetization-panel {
+      border-radius: 10px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(103, 142, 190, 0.22);
+    }
+
+    .monetization-panel h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: #12396e;
+    }
+
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 6px;
+      max-height: 160px;
+      overflow-y: auto;
+      font-size: 12px;
+    }
+
+    .feature-list li {
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(103, 142, 190, 0.15);
+    }
+
+    .feature-list li.locked {
+      opacity: 0.55;
+    }
+
+    .feature-list li.locked::before {
+      content: "🔒 ";
+    }
+
+    .feature-list li.unlocked::before {
+      content: "✓ ";
+      color: var(--ok);
+    }
+
+    .upgrade-card {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255, 248, 220, 0.95), rgba(255, 236, 179, 0.9));
+      border: 1px solid rgba(212, 160, 23, 0.35);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+
+    .upgrade-card strong {
+      display: block;
+      color: #7a5a00;
+      margin-bottom: 4px;
+    }
+
+    .license-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .license-row input {
+      flex: 1;
+      min-width: 0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(103, 142, 190, 0.35);
+      font-size: 12px;
+    }
+
+    .license-msg {
+      margin-top: 8px;
+      font-size: 12px;
+      min-height: 18px;
+    }
+
+    .license-msg.ok { color: var(--ok); }
+    .license-msg.err { color: #b42318; }
+
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .pricing-card {
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px solid rgba(103, 142, 190, 0.2);
+      font-size: 12px;
+    }
+
+    .pricing-card.current {
+      border-color: #42b047;
+      box-shadow: 0 0 0 2px rgba(66, 176, 71, 0.25);
+    }
+
+    .pricing-card h4 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      color: #12396e;
+    }
+
+    .pricing-card ul {
+      margin: 8px 0 0;
+      padding-left: 16px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 900px) {
+      .monetization-grid,
+      .pricing-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 1120px) {
       .workspace {
         grid-template-columns: 1fr;
@@ -588,26 +762,30 @@
 <body>
   <div class="desktop">
     <aside class="desktop-icons">
-      <div class="desktop-icon selected">
+      <div class="desktop-icon selected" data-target="window-home" tabindex="0" role="button">
         <div class="desktop-icon-glyph">N</div>
         <span>Noahubai</span>
       </div>
-      <div class="desktop-icon">
+      <div class="desktop-icon" data-target="window-agents" tabindex="0" role="button">
         <div class="desktop-icon-glyph">A</div>
         <span>Agents</span>
       </div>
-      <div class="desktop-icon">
+      <div class="desktop-icon" data-target="window-monetization" tabindex="0" role="button">
+        <div class="desktop-icon-glyph">$</div>
+        <span>Plans</span>
+      </div>
+      <div class="desktop-icon" data-target="window-issues" tabindex="0" role="button">
         <div class="desktop-icon-glyph">I</div>
         <span>Issues</span>
       </div>
-      <div class="desktop-icon">
+      <div class="desktop-icon" data-target="window-docs" tabindex="0" role="button">
         <div class="desktop-icon-glyph">D</div>
         <span>Docs</span>
       </div>
     </aside>
 
     <main class="workspace">
-      <section class="window-shell">
+      <section id="window-home" class="window-shell highlight">
         <div class="window active">
           <div class="title-bar">
             <div class="title-bar-text">Noahubai Home</div>
@@ -681,14 +859,14 @@
         </div>
       </section>
 
-      <section class="window-shell">
+      <section id="window-agents" class="window-shell">
         <div class="window">
           <div class="title-bar">
             <div class="title-bar-text">Agent Overview</div>
             <div class="title-bar-controls" aria-label="Window controls">
-              <button aria-label="Minimize"></button>
-              <button aria-label="Maximize"></button>
-              <button aria-label="Close"></button>
+              <button type="button" data-action="minimize" aria-label="Minimize"></button>
+              <button type="button" data-action="maximize" aria-label="Maximize"></button>
+              <button type="button" data-action="close" aria-label="Close"></button>
             </div>
           </div>
           <div class="window-body">
@@ -697,7 +875,42 @@
         </div>
       </section>
 
-      <section class="window-shell">
+      <section id="window-monetization" class="window-shell">
+        <div class="window">
+          <div class="title-bar">
+            <div class="title-bar-text">Plans &amp; Monetization</div>
+            <div class="title-bar-controls" aria-label="Window controls">
+              <button type="button" data-action="minimize" aria-label="Minimize"></button>
+              <button type="button" data-action="maximize" aria-label="Maximize"></button>
+              <button type="button" data-action="close" aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="window-body">
+            <div class="monetization-grid">
+              <div class="monetization-panel">
+                <h3>Your plan — <span id="monPlanLabel">Free</span></h3>
+                <p id="monPlanTagline" style="margin:0 0 10px;font-size:13px;color:#536172;">Loading...</p>
+                <ul id="monFeatureList" class="feature-list"></ul>
+                <div class="license-row">
+                  <input id="licenseInput" type="text" placeholder="NHUB-pro-..." autocomplete="off">
+                  <button id="activateButton" type="button">Activate</button>
+                </div>
+                <p id="licenseMessage" class="license-msg"></p>
+              </div>
+              <div class="monetization-panel">
+                <h3>Upgrade recommendations</h3>
+                <div id="monRecommendations"></div>
+              </div>
+            </div>
+            <div class="monetization-panel" style="margin-top:14px;">
+              <h3>Compare plans</h3>
+              <div id="monPricingCards" class="pricing-cards"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="window-issues" class="window-shell">
         <div class="window">
           <div class="title-bar">
             <div class="title-bar-text">Issue Console</div>
@@ -713,7 +926,7 @@
         </div>
       </section>
 
-      <section class="window-shell">
+      <section id="window-docs" class="window-shell">
         <div class="window">
           <div class="title-bar">
             <div class="title-bar-text">Desktop Notes</div>
@@ -731,6 +944,8 @@
             <ul>
               <li>Health API: <a href="/api/health" target="_blank" rel="noopener">/api/health</a></li>
               <li>Status API: <a href="/api/status" target="_blank" rel="noopener">/api/status</a></li>
+              <li>Entitlements: <a href="/api/entitlements" target="_blank" rel="noopener">/api/entitlements</a></li>
+              <li>Monetization: <a href="/api/monetization/status" target="_blank" rel="noopener">/api/monetization/status</a></li>
               <li>Issue API: <a href="/api/issues" target="_blank" rel="noopener">/api/issues</a></li>
               <li>WebSocket: <code>/ws</code></li>
             </ul>
@@ -745,11 +960,13 @@
       <span>Start</span>
     </button>
     <div class="task-buttons">
-      <div class="task-button active">Noahubai Home</div>
-      <div class="task-button">Agent Overview</div>
-      <div class="task-button">Issue Console</div>
+      <button type="button" class="task-button active" data-target="window-home">Noahubai Home</button>
+      <button type="button" class="task-button" data-target="window-agents">Agent Overview</button>
+      <button type="button" class="task-button" data-target="window-monetization">Plans</button>
+      <button type="button" class="task-button" data-target="window-issues">Issue Console</button>
     </div>
     <div class="tray">
+      <div class="tray-pill"><span id="trayPlan" class="plan-badge free">Free</span></div>
       <div class="tray-pill" id="trayHealth">Backend offline</div>
       <div class="tray-pill" id="trayClock">--:--</div>
     </div>
@@ -766,6 +983,7 @@
       </div>
       <div class="start-links">
         <a class="start-link" href="/" target="_self">Desktop Home</a>
+        <a class="start-link" href="#window-monetization" data-target="window-monetization">Plans &amp; Licensing</a>
         <a class="start-link" href="/docs" target="_blank" rel="noopener">API Documentation</a>
         <a class="start-link" href="/api/status" target="_blank" rel="noopener">System Status JSON</a>
       </div>
@@ -786,7 +1004,14 @@
       eventCount: 0,
       socket: null,
       pingTimer: null,
+      currentPlan: "free",
+      allFeatures: new Set(),
+      eventLines: [],
+      refreshTimer: null,
+      monetizationLoaded: false,
     };
+
+    const MAX_CONSOLE_LINES = 120;
 
     const agentGrid = document.getElementById("agentGrid");
     const eventConsole = document.getElementById("eventConsole");
@@ -800,11 +1025,41 @@
     const successRate = document.getElementById("successRate");
     const liveEvents = document.getElementById("liveEvents");
     const trayHealth = document.getElementById("trayHealth");
+    const trayPlan = document.getElementById("trayPlan");
     const trayClock = document.getElementById("trayClock");
     const startButton = document.getElementById("startButton");
     const startMenu = document.getElementById("startMenu");
     const refreshButton = document.getElementById("refreshButton");
     const analyzeButton = document.getElementById("analyzeButton");
+    const licenseInput = document.getElementById("licenseInput");
+    const activateButton = document.getElementById("activateButton");
+    const licenseMessage = document.getElementById("licenseMessage");
+    const monPlanLabel = document.getElementById("monPlanLabel");
+    const monPlanTagline = document.getElementById("monPlanTagline");
+    const monFeatureList = document.getElementById("monFeatureList");
+    const monRecommendations = document.getElementById("monRecommendations");
+    const monPricingCards = document.getElementById("monPricingCards");
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    async function fetchJson(url, options) {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        let detail = response.statusText;
+        try {
+          const err = await response.json();
+          detail = err.detail || err.error || JSON.stringify(err);
+        } catch (_) { /* ignore */ }
+        throw new Error(detail);
+      }
+      return response.json();
+    }
 
     function setBackendStatus(ok, message) {
       backendDot.className = "status-dot " + (ok ? "ok" : "warn");
@@ -817,20 +1072,63 @@
       socketStatus.textContent = message;
     }
 
-    function appendEvent(text) {
-      if (eventConsole.querySelector(".events-empty")) {
-        eventConsole.textContent = "";
-      }
+    function setPlanBadge(plan) {
+      state.currentPlan = plan || "free";
+      const label = plan.charAt(0).toUpperCase() + plan.slice(1);
+      trayPlan.textContent = label;
+      trayPlan.className = "plan-badge " + plan;
+      monPlanLabel.textContent = label;
+    }
 
+    function appendEvent(text) {
       const now = new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
       });
-      eventConsole.textContent += "[" + now + "] " + text + "\n";
+      state.eventLines.push("[" + now + "] " + text);
+      if (state.eventLines.length > MAX_CONSOLE_LINES) {
+        state.eventLines.splice(0, state.eventLines.length - MAX_CONSOLE_LINES);
+      }
+      eventConsole.textContent = state.eventLines.join("\n");
       eventConsole.scrollTop = eventConsole.scrollHeight;
       state.eventCount += 1;
       liveEvents.textContent = String(state.eventCount);
+    }
+
+    function formatWsEvent(data) {
+      if (data.type === "connected") return "WebSocket connected.";
+      if (data.type === "pong") return null;
+      if (data.event_name === "system.startup_complete") {
+        return "System startup complete (" + (data.data && data.data.agents) + " agents).";
+      }
+      if (data.event_name === "monetization.license_activated") {
+        return "License activated: " + (data.data && data.data.plan) + " plan.";
+      }
+      if (data.event_name) {
+        return data.event_name + ": " + JSON.stringify(data.data || {});
+      }
+      return "Event: " + JSON.stringify(data);
+    }
+
+    function focusWindow(targetId) {
+      const el = document.getElementById(targetId);
+      if (!el) return;
+
+      document.querySelectorAll(".window-shell").forEach((win) => {
+        win.classList.remove("highlight");
+        win.classList.remove("collapsed");
+      });
+      el.classList.add("highlight");
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      document.querySelectorAll(".desktop-icon").forEach((icon) => {
+        icon.classList.toggle("selected", icon.dataset.target === targetId);
+      });
+      document.querySelectorAll(".task-button").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.target === targetId);
+      });
+      startMenu.classList.remove("open");
     }
 
     function renderAgents(agents, healthMap) {
@@ -843,57 +1141,154 @@
         const health = healthMap[agent.name] || {};
         const ok = Boolean(health.healthy);
         const badgeClass = ok ? "ok" : "warn";
-        const label = ok ? "Ready" : (health.state || "Unknown");
+        const label = ok ? "Ready" : escapeHtml(health.state || "Unknown");
+        const isMon = agent.type === "monetization";
 
         return `
-          <article class="agent-card">
+          <article class="agent-card"${isMon ? ' style="border-color:rgba(212,160,23,0.45)"' : ""}>
             <header>
-              <h3>${agent.name}</h3>
+              <h3>${escapeHtml(agent.name)}${isMon ? " 💰" : ""}</h3>
               <span class="badge ${badgeClass}">${label}</span>
             </header>
-            <p class="agent-meta"><strong>Type:</strong> ${agent.type}</p>
-            <p class="agent-meta"><strong>Priority:</strong> ${agent.priority}</p>
-            <p class="agent-meta"><strong>Description:</strong> ${agent.description}</p>
+            <p class="agent-meta"><strong>Type:</strong> ${escapeHtml(agent.type)}</p>
+            <p class="agent-meta"><strong>Priority:</strong> ${escapeHtml(agent.priority)}</p>
+            <p class="agent-meta"><strong>Description:</strong> ${escapeHtml(agent.description)}</p>
           </article>
         `;
       }).join("");
     }
 
-    async function loadDashboard() {
+    function renderMonetization(status, recommendations, pricing) {
+      setPlanBadge(status.plan);
+      monPlanTagline.textContent = (status.plan_summary && status.plan_summary.tagline) || "";
+
+      state.allFeatures = new Set(status.features || []);
+
+      const displayFeatures = [...state.allFeatures]
+        .filter((f) => !f.startsWith("core.") || f === "core.cursor_bridge")
+        .slice(0, 12);
+
+      monFeatureList.innerHTML = displayFeatures.map((f) => {
+        const unlocked = state.allFeatures.has(f);
+        return `<li class="${unlocked ? "unlocked" : "locked"}">${escapeHtml(f)}</li>`;
+      }).join("");
+
+      const recs = recommendations.recommendations || [];
+      if (!recs.length) {
+        monRecommendations.innerHTML = "<p style='font-size:12px;color:#536172;margin:0'>You're on the top tier — all workflow features unlocked.</p>";
+      } else {
+        monRecommendations.innerHTML = recs.map((r) => `
+          <div class="upgrade-card">
+            <strong>${escapeHtml(r.title)}</strong>
+            ${escapeHtml(r.benefit)}
+            <div style="margin-top:4px;font-size:11px;opacity:.8">Requires ${escapeHtml(r.required_plan)} plan</div>
+          </div>
+        `).join("");
+      }
+
+      const plans = pricing.plans || {};
+      monPricingCards.innerHTML = Object.entries(plans).map(([id, plan]) => `
+        <div class="pricing-card${id === status.plan ? " current" : ""}">
+          <h4>${escapeHtml(plan.label || id)} ${id === status.plan ? "(current)" : ""}</h4>
+          <div>${escapeHtml(plan.tagline || "")}</div>
+          <ul>${(plan.highlights || []).map((h) => `<li>${escapeHtml(h)}</li>`).join("")}</ul>
+        </div>
+      `).join("");
+    }
+
+    function renderMonetizationFromSummary(mon) {
+      if (!mon) return;
+      renderMonetization(mon.status, mon.recommendations, mon.pricing);
+      state.monetizationLoaded = true;
+    }
+
+    async function loadMonetization(force) {
+      if (state.monetizationLoaded && !force) return;
       try {
-        const [healthRes, statusRes, issuesRes] = await Promise.all([
-          fetch("/api/health"),
-          fetch("/api/status"),
-          fetch("/api/issues"),
-        ]);
+        const mon = await fetchJson("/api/monetization/summary");
+        renderMonetizationFromSummary(mon);
+      } catch (error) {
+        monPlanTagline.textContent = "Could not load plan: " + error.message;
+        appendEvent("Monetization load failed: " + error.message);
+      }
+    }
 
-        const health = await healthRes.json();
-        const status = await statusRes.json();
-        const issues = await issuesRes.json();
+    function applyDesktopSummary(summary) {
+      const health = summary.health || {};
+      const stats = summary.statistics || {};
+      const issueList = summary.issues || [];
 
-        const totalAgents = health.system ? health.system.total_agents : 0;
-        const healthyCount = health.system ? health.system.healthy_agents : 0;
+      setBackendStatus(health.status === "healthy", "Backend " + (health.status || "unknown"));
+      healthyAgents.textContent = String(health.healthy_agents || 0);
+      healthyAgentsSub.textContent =
+        (health.healthy_agents || 0) + " of " + (health.total_agents || 0) + " healthy";
+      openIssues.textContent = String(
+        issueList.filter((issue) => issue.status !== "resolved").length
+      );
+      successRate.textContent = Math.round((stats.success_rate || 0) * 100) + "%";
+      renderAgents(summary.agents || [], summary.agent_health || {});
+      renderMonetizationFromSummary(summary.monetization);
+    }
 
-        setBackendStatus(health.status === "healthy", "Backend " + health.status);
-        healthyAgents.textContent = String(healthyCount);
-        healthyAgentsSub.textContent = healthyCount + " of " + totalAgents + " healthy";
-        openIssues.textContent = String((issues.issues || []).filter((issue) => issue.status !== "resolved").length);
-        successRate.textContent = Math.round((status.statistics.success_rate || 0) * 100) + "%";
-        renderAgents(status.agents || [], status.health || {});
-        appendEvent("Desktop refresh completed.");
+    async function loadDesktopSummary(options) {
+      const silent = options && options.silent;
+      try {
+        const summary = await fetchJson("/api/desktop/summary");
+        applyDesktopSummary(summary);
+        if (!silent) appendEvent("Desktop refresh completed.");
       } catch (error) {
         setBackendStatus(false, "Backend unavailable");
         appendEvent("Refresh failed: " + error.message);
       }
     }
 
-    async function analyzeIssues() {
+    function scheduleRefresh() {
+      if (state.refreshTimer) window.clearTimeout(state.refreshTimer);
+      state.refreshTimer = window.setTimeout(() => {
+        state.refreshTimer = null;
+        loadDesktopSummary();
+      }, 250);
+    }
+
+    async function activateLicense() {
+      const key = licenseInput.value.trim();
+      licenseMessage.textContent = "";
+      licenseMessage.className = "license-msg";
+      if (!key) {
+        licenseMessage.textContent = "Enter a license key first.";
+        licenseMessage.className = "license-msg err";
+        return;
+      }
+      activateButton.disabled = true;
       try {
-        const response = await fetch("/api/issues/analysis");
-        const payload = await response.json();
+        const result = await fetchJson("/api/monetization/activate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ license_key: key }),
+        });
+        licenseMessage.textContent = "Activated " + (result.entitlements && result.entitlements.plan || "plan") + " successfully.";
+        licenseMessage.className = "license-msg ok";
+        licenseInput.value = "";
+        appendEvent("License activated: " + (result.entitlements && result.entitlements.plan || "plan"));
+        state.monetizationLoaded = false;
+        await loadDesktopSummary({ silent: true });
+      } catch (error) {
+        licenseMessage.textContent = error.message;
+        licenseMessage.className = "license-msg err";
+      } finally {
+        activateButton.disabled = false;
+      }
+    }
+
+    async function analyzeIssues() {
+      analyzeButton.disabled = true;
+      try {
+        const payload = await fetchJson("/api/issues/analysis");
         appendEvent("Issue analysis: " + JSON.stringify(payload));
       } catch (error) {
         appendEvent("Issue analysis failed: " + error.message);
+      } finally {
+        analyzeButton.disabled = false;
       }
     }
 
@@ -904,14 +1299,12 @@
       state.socket = socket;
 
       socket.addEventListener("open", () => {
-        if (state.socket !== socket) {
-          return;
-        }
+        if (state.socket !== socket) return;
         setSocketStatus(true, "Live feed connected");
-        appendEvent("WebSocket connected.");
-        if (state.pingTimer) {
-          window.clearInterval(state.pingTimer);
+        if (state.eventLines.length === 0) {
+          appendEvent("WebSocket connected.");
         }
+        if (state.pingTimer) window.clearInterval(state.pingTimer);
         state.pingTimer = window.setInterval(() => {
           if (state.socket === socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({ type: "ping" }));
@@ -920,20 +1313,25 @@
       });
 
       socket.addEventListener("message", (event) => {
-        if (state.socket !== socket) {
+        if (state.socket !== socket) return;
+        let data;
+        try {
+          data = JSON.parse(event.data);
+        } catch (_) {
+          appendEvent("Event: " + event.data);
           return;
         }
-        const data = JSON.parse(event.data);
-        if (data.type === "pong") {
-          return;
+        if (data.type === "pong") return;
+        if (data.event_name === "monetization.license_activated") {
+          state.monetizationLoaded = false;
+          loadDesktopSummary({ silent: true });
         }
-        appendEvent("Event: " + JSON.stringify(data));
+        const line = formatWsEvent(data);
+        if (line) appendEvent(line);
       });
 
-      socket.addEventListener("close", (event) => {
-        if (state.socket !== socket) {
-          return;
-        }
+      socket.addEventListener("close", () => {
+        if (state.socket !== socket) return;
         if (state.pingTimer) {
           window.clearInterval(state.pingTimer);
           state.pingTimer = null;
@@ -945,9 +1343,7 @@
       });
 
       socket.addEventListener("error", () => {
-        if (state.socket !== socket) {
-          return;
-        }
+        if (state.socket !== socket) return;
         setSocketStatus(false, "Live feed error");
       });
     }
@@ -956,6 +1352,23 @@
       trayClock.textContent = new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
+      });
+    }
+
+    function wireWindowControls() {
+      document.querySelectorAll(".title-bar-controls button[data-action]").forEach((btn) => {
+        btn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const shell = btn.closest(".window-shell");
+          if (!shell) return;
+          const action = btn.dataset.action;
+          if (action === "minimize" || action === "close") {
+            shell.classList.toggle("collapsed");
+          } else if (action === "maximize") {
+            shell.classList.remove("collapsed");
+            focusWindow(shell.id);
+          }
+        });
       });
     }
 
@@ -969,12 +1382,37 @@
       }
     });
 
-    refreshButton.addEventListener("click", loadDashboard);
-    analyzeButton.addEventListener("click", analyzeIssues);
+    document.querySelectorAll("[data-target]").forEach((el) => {
+      el.addEventListener("click", (event) => {
+        const target = el.dataset.target;
+        if (!target || !target.startsWith("window-")) return;
+        if (el.tagName === "A") event.preventDefault();
+        focusWindow(target);
+        if (target === "window-monetization" && !state.monetizationLoaded) {
+          loadMonetization(true);
+        }
+      });
+      if (el.classList.contains("desktop-icon")) {
+        el.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            focusWindow(el.dataset.target);
+          }
+        });
+      }
+    });
 
+    refreshButton.addEventListener("click", scheduleRefresh);
+    analyzeButton.addEventListener("click", analyzeIssues);
+    activateButton.addEventListener("click", activateLicense);
+    licenseInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") activateLicense();
+    });
+
+    wireWindowControls();
     updateClock();
     window.setInterval(updateClock, 1000);
-    loadDashboard();
+    loadDesktopSummary({ silent: true });
     connectSocket();
   </script>
 </body>

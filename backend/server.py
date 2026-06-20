@@ -5,7 +5,7 @@ Handles all agent communication and provides REST/WebSocket interface
 import asyncio
 import logging
 from pathlib import Path
-from fastapi import FastAPI, WebSocket, HTTPException, BackgroundTasks
+from fastapi import FastAPI, WebSocket, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from contextlib import asynccontextmanager
@@ -20,9 +20,24 @@ from core import (
 from agents.memory_agent import MemoryAgent
 from agents.issue_agent import IssueAgent
 from agents.fixer_agent import FixerAgent
+from agents.monetization_agent import MonetizationAgent
+from backend.entitlements import entitlement_service, PlanTier, generate_license_key
+from backend.middleware import EntitlementMiddleware
 
 logger = logging.getLogger(__name__)
 FRONTEND_FILE = Path(__file__).resolve().parent.parent / "frontend" / "windows7_shell.html"
+_FRONTEND_HTML: str | None = None
+_FRONTEND_MTIME: float | None = None
+
+
+def _get_frontend_html() -> str:
+    """Load shell HTML once; refresh only when the file changes."""
+    global _FRONTEND_HTML, _FRONTEND_MTIME
+    mtime = FRONTEND_FILE.stat().st_mtime
+    if _FRONTEND_HTML is None or _FRONTEND_MTIME != mtime:
+        _FRONTEND_HTML = FRONTEND_FILE.read_text(encoding="utf-8")
+        _FRONTEND_MTIME = mtime
+    return _FRONTEND_HTML
 
 # Global instances
 event_bus: EventBus = None
@@ -49,6 +64,7 @@ async def startup_event():
         MemoryAgent(state_manager, event_bus),
         IssueAgent(state_manager, event_bus),
         FixerAgent(state_manager, event_bus),
+        MonetizationAgent(state_manager, event_bus),
     ]
     
     for agent in agents:
@@ -97,10 +113,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Noahubai API",
-    description="Unified AI Application with Memory, Issue Tracking, and Auto-Fixing",
+    description=(
+        "Local AI engine for AI Hub — Memory, Issue Tracking, and Auto-Fixing. "
+        "Open-core with Free/Pro/Team entitlements."
+    ),
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Entitlement enforcement (strict mode via NOAHUBAI_ENTITLEMENTS_STRICT)
+app.add_middleware(EntitlementMiddleware)
 
 # CORS middleware
 app.add_middleware(
@@ -141,6 +163,173 @@ async def broadcast_event(event):
         ws_connections.remove(ws)
 
 
+# ==================== Entitlements ====================
+
+@app.get("/api/entitlements")
+async def get_entitlements():
+    """Current plan, enabled features, and license status."""
+    from backend.entitlements import FEATURE_MATRIX
+
+    ctx = entitlement_service.resolve()
+    return {
+        "entitlements": ctx.to_dict(),
+        "available_plans": [t.value for t in PlanTier],
+        "feature_matrix_summary": {
+            tier.value: len(FEATURE_MATRIX[tier]) for tier in PlanTier
+        },
+        "documentation": {
+            "product": "docs/PRODUCT.md",
+            "pricing": "docs/PRICING.md",
+        },
+    }
+
+
+@app.post("/api/entitlements/activate")
+async def activate_entitlements(request: Dict[str, Any]):
+    """Activate a Pro or Team license key."""
+    license_key = request.get("license_key", "").strip()
+    if not license_key:
+        raise HTTPException(status_code=400, detail="license_key is required")
+    try:
+        ctx = entitlement_service.activate_license(license_key)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"status": "activated", "entitlements": ctx.to_dict()}
+
+
+@app.get("/api/entitlements/dev-key")
+async def dev_license_key(tier: str = "pro"):
+    """
+    Generate a dev license key (non-production only).
+    Disabled when NOAHUBAI_DISABLE_DEV_KEYS=true.
+    """
+    import os
+
+    if os.getenv("NOAHUBAI_DISABLE_DEV_KEYS", "false").lower() in ("1", "true", "yes"):
+        raise HTTPException(status_code=404, detail="Not found")
+    try:
+        plan = PlanTier(tier.lower())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="tier must be free, pro, or team")
+    if plan == PlanTier.FREE:
+        raise HTTPException(status_code=400, detail="free tier does not need a key")
+    key = generate_license_key(plan, license_id="dev")
+    return {"license_key": key, "tier": plan.value}
+
+
+# ==================== Premium (Pro/Team) API stubs ====================
+
+@app.get("/api/memory/search")
+async def search_memory(q: str = ""):
+    """Pro: searchable session / pattern history."""
+    patterns = await agent_registry.call_agent("memory_agent", "recall_pattern")
+    query = q.lower()
+    if query and isinstance(patterns, dict):
+        filtered = {
+            k: v
+            for k, v in patterns.items()
+            if query in k.lower() or query in str(v).lower()
+        }
+        return {"query": q, "results": filtered, "tier": "pro.advanced_memory_search"}
+    return {"query": q, "results": patterns, "tier": "pro.advanced_memory_search"}
+
+
+@app.get("/api/memory/export")
+async def export_memory(format: str = "json"):
+    """Pro: export memory patterns and solutions."""
+    patterns = await agent_registry.call_agent("memory_agent", "recall_pattern")
+    return {"format": format, "data": patterns, "tier": "pro.premium_import_export"}
+
+
+@app.get("/api/automation/recipes")
+async def list_automation_recipes():
+    """Pro: background automation recipe catalog."""
+    return {
+        "recipes": [],
+        "message": "Connect AI Hub automation packs or add recipes locally.",
+        "tier": "pro.background_automation",
+    }
+
+
+@app.get("/api/analytics/summary")
+async def analytics_summary():
+    """Pro: local-first usage and growth analytics."""
+    stats = await state_manager.get_statistics()
+    growth = await agent_registry.call_agent("memory_agent", "get_growth_metrics")
+    return {"statistics": stats, "growth": growth, "tier": "pro.local_analytics"}
+
+
+@app.get("/api/audit/events")
+async def audit_events(limit: int = 50):
+    """Pro: audit trail of agent actions."""
+    actions = await state_manager.get_action_history(limit=limit)
+    return {"events": actions, "tier": "pro.audit_trail"}
+
+
+@app.get("/api/team/workspaces")
+async def team_workspaces():
+    """Team: shared workspace list (managed sync required for production)."""
+    return {
+        "workspaces": [],
+        "tier": "team.shared_workspaces",
+        "message": "Enable Team plan and managed sync for shared workspaces.",
+    }
+
+
+@app.get("/api/team/knowledge")
+async def team_knowledge():
+    """Team: shared knowledge base index."""
+    return {"documents": [], "tier": "team.knowledge_base"}
+
+
+@app.get("/api/team/sync")
+async def team_sync_status():
+    """Team: managed relay / sync status."""
+    return {"sync_enabled": False, "tier": "team.managed_sync"}
+
+
+# ==================== Monetization Agent API ====================
+
+@app.get("/api/monetization/status")
+async def monetization_status():
+    """Plan, features, and license status via monetization agent."""
+    return await agent_registry.call_agent("monetization_agent", "get_status")
+
+
+@app.get("/api/monetization/recommendations")
+async def monetization_recommendations():
+    """Upsell recommendations for locked features."""
+    return await agent_registry.call_agent("monetization_agent", "get_recommendations")
+
+
+@app.get("/api/monetization/pricing")
+async def monetization_pricing():
+    """Pricing matrix for UI display."""
+    return await agent_registry.call_agent("monetization_agent", "get_pricing")
+
+
+@app.get("/api/monetization/summary")
+async def monetization_summary():
+    """Bundled monetization payload for desktop UI (single agent call)."""
+    return await agent_registry.call_agent("monetization_agent", "get_summary")
+
+
+@app.post("/api/monetization/activate")
+async def monetization_activate(request: Dict[str, Any]):
+    """Activate license via monetization agent."""
+    license_key = request.get("license_key", "").strip()
+    if not license_key:
+        raise HTTPException(status_code=400, detail="license_key is required")
+    result = await agent_registry.call_agent(
+        "monetization_agent",
+        "activate_license",
+        license_key=license_key,
+    )
+    if result.get("status") == "error":
+        raise HTTPException(status_code=400, detail=result.get("error", "Activation failed"))
+    return result
+
+
 # ==================== Health & Status ====================
 
 @app.get("/api/health")
@@ -174,6 +363,36 @@ async def system_status():
         "agents": agent_registry.list_agents(),
         "statistics": stats,
         "health": agent_health,
+    }
+
+
+@app.get("/api/desktop/summary")
+async def desktop_summary():
+    """
+    Single payload for the desktop shell — avoids duplicate health/issue fetches.
+    """
+    stats = await state_manager.get_statistics()
+    agent_health = await agent_registry.health_check_all()
+    issues_result, monetization = await asyncio.gather(
+        agent_registry.call_agent("issue_agent", "list_issues"),
+        agent_registry.call_agent("monetization_agent", "get_summary"),
+    )
+
+    healthy_count = sum(1 for s in agent_health.values() if s.get("healthy"))
+    total_agents = len(agent_health)
+
+    return {
+        "timestamp": datetime.utcnow().isoformat(),
+        "health": {
+            "status": "healthy" if healthy_count == total_agents else "degraded",
+            "total_agents": total_agents,
+            "healthy_agents": healthy_count,
+        },
+        "agents": agent_registry.list_agents(),
+        "agent_health": agent_health,
+        "statistics": stats,
+        "issues": issues_result.get("issues", []),
+        "monetization": monetization,
     }
 
 
@@ -451,7 +670,10 @@ async def general_exception_handler(request, exc):
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve the Windows 7 style Noahubai shell."""
-    return FRONTEND_FILE.read_text(encoding="utf-8")
+    return HTMLResponse(
+        content=_get_frontend_html(),
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 if __name__ == "__main__":

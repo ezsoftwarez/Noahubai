@@ -1,5 +1,20 @@
 # NOAHUBAI - Unified AI Application Architecture Plan
 
+## Product & monetization
+
+**Primary product:** [AI Hub](AI%20HUB%20oVerk1LL/) — local Cursor bridge and daily-run workspace.  
+**Engine:** Noahubai backend (this repo's agents + FastAPI).  
+**Model:** Open-core — Free local core; Pro/Team workflow features via entitlements.
+
+| Doc | Purpose |
+|-----|---------|
+| [docs/PRODUCT.md](docs/PRODUCT.md) | Product definition and audience |
+| [docs/PRICING.md](docs/PRICING.md) | Free / Pro / Team feature split |
+| [backend/entitlements.py](backend/entitlements.py) | Plan tiers and feature matrix |
+| [backend/middleware.py](backend/middleware.py) | API entitlement enforcement |
+
+Experiments (job/freelance demos) are **not** the core product — see [docs/experiments/](docs/experiments/).
+
 ## 🎯 Vision
 Single, monolithic AI application combining browser, AI Hub, and multiple independent intelligent agents working in parallel with zero coupling.
 
@@ -83,7 +98,8 @@ noahubai/
 │   ├── server.py                   # Flask/FastAPI main server
 │   ├── api_routes.py               # REST endpoints
 │   ├── websocket_handler.py        # Real-time communication
-│   ├── middleware.py               # Auth, logging, rate-limiting
+│   ├── middleware.py               # Auth, logging, rate-limiting, entitlements
+│   ├── entitlements.py             # Free/Pro/Team plans and license keys
 │   ├── db/                         # Database layer
 │   │   ├── models.py
 │   │   ├── orm_config.py
