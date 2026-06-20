@@ -20,6 +20,7 @@ from core import (
 from agents.memory_agent import MemoryAgent
 from agents.issue_agent import IssueAgent
 from agents.fixer_agent import FixerAgent
+from agents.monetization_agent import MonetizationAgent
 from backend.entitlements import entitlement_service, PlanTier, generate_license_key
 from backend.middleware import EntitlementMiddleware
 
@@ -51,6 +52,7 @@ async def startup_event():
         MemoryAgent(state_manager, event_bus),
         IssueAgent(state_manager, event_bus),
         FixerAgent(state_manager, event_bus),
+        MonetizationAgent(state_manager, event_bus),
     ]
     
     for agent in agents:
@@ -272,6 +274,42 @@ async def team_knowledge():
 async def team_sync_status():
     """Team: managed relay / sync status."""
     return {"sync_enabled": False, "tier": "team.managed_sync"}
+
+
+# ==================== Monetization Agent API ====================
+
+@app.get("/api/monetization/status")
+async def monetization_status():
+    """Plan, features, and license status via monetization agent."""
+    return await agent_registry.call_agent("monetization_agent", "get_status")
+
+
+@app.get("/api/monetization/recommendations")
+async def monetization_recommendations():
+    """Upsell recommendations for locked features."""
+    return await agent_registry.call_agent("monetization_agent", "get_recommendations")
+
+
+@app.get("/api/monetization/pricing")
+async def monetization_pricing():
+    """Pricing matrix for UI display."""
+    return await agent_registry.call_agent("monetization_agent", "get_pricing")
+
+
+@app.post("/api/monetization/activate")
+async def monetization_activate(request: Dict[str, Any]):
+    """Activate license via monetization agent."""
+    license_key = request.get("license_key", "").strip()
+    if not license_key:
+        raise HTTPException(status_code=400, detail="license_key is required")
+    result = await agent_registry.call_agent(
+        "monetization_agent",
+        "activate_license",
+        license_key=license_key,
+    )
+    if result.get("status") == "error":
+        raise HTTPException(status_code=400, detail=result.get("error", "Activation failed"))
+    return result
 
 
 # ==================== Health & Status ====================
@@ -584,7 +622,10 @@ async def general_exception_handler(request, exc):
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve the Windows 7 style Noahubai shell."""
-    return FRONTEND_FILE.read_text(encoding="utf-8")
+    return HTMLResponse(
+        content=FRONTEND_FILE.read_text(encoding="utf-8"),
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 if __name__ == "__main__":

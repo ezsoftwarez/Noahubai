@@ -520,6 +520,7 @@ MEMORY_CLEANUP_INTERVAL=3600
 ## 🌟 Key Highlights
 
 ✨ **Fully Decoupled Agents** - No dependencies between agents
+✨ **Monetization Agent** - Plan tiers, license activation, upgrade recommendations
 ✨ **Continuous Learning** - Gets smarter over time
 ✨ **Never Forgets** - All issues remembered
 ✨ **Automatic Fixing** - Solves problems independently
