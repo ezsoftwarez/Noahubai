@@ -1,5 +1,10 @@
 # 🤖 NOAHUBAI - Complete System Summary
 
+> **Product:** Local AI workspace for Cursor and multi-model power users.  
+> **Primary surface:** [AI Hub](AI%20HUB%20oVerk1LL/) — install via `Setup.exe`, run `AI HUB.exe` daily.  
+> **Engine:** This backend (Memory, Issue, Fixer agents on port 8000).  
+> **Monetization:** Open-core Free / Pro / Team — see [docs/PRICING.md](docs/PRICING.md).
+
 ## 📦 What You Now Have
 
 A **complete, production-ready intelligent AI system** with:
@@ -467,7 +472,8 @@ MEMORY_CLEANUP_INTERVAL=3600
 - REST API for all operations
 - WebSocket for real-time updates
 - JSON request/response format
-- Authentication ready (add as needed)
+- Entitlements API at `/api/entitlements` (Free / Pro / Team)
+- License activation at `/api/entitlements/activate`
 
 ### **For Custom Agents**
 - Inherit from BaseAgent
