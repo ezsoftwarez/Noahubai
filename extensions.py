@@ -151,7 +151,6 @@ class TabVault:
 
 @dataclass
 class KoboldBlockRules:
-    enabled: bool
     exact_hosts: Set[str]
     domain_suffixes: Set[str]
     url_contains: List[str]
@@ -207,7 +206,6 @@ def parse_koboldblock(text: str) -> KoboldBlockRules:
         exact_hosts.add(line.lower())
 
     return KoboldBlockRules(
-        enabled=True,
         exact_hosts=exact_hosts,
         domain_suffixes=domain_suffixes,
         url_contains=url_contains[:500],
