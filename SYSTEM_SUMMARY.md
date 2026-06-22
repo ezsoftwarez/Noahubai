@@ -370,7 +370,6 @@ curl http://localhost:8000/api/memory/growth
 ```env
 HOST=0.0.0.0
 PORT=8000
-DEBUG=false
 LOG_LEVEL=INFO
 AGENT_TIMEOUT=30
 MAX_RETRIES=3
