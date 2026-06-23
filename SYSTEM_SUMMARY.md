@@ -56,7 +56,6 @@ A **complete, production-ready intelligent AI system** with:
 - **EventBus**: Pub/Sub system for decoupled communication
 - **StateManager**: Centralized state with issue tracking and memory
 - **AgentRegistry**: Manages agent lifecycle and discovery
-- **SettingsManager**: Advanced configuration system with backup/restore
 
 ### **API Layer**
 - **FastAPI Server** on port 8000
@@ -133,52 +132,11 @@ chmod +x setup.sh
 
 ---
 
-## ⚙️ Advanced Configuration
+## ⚙️ Configuration Scope
 
-### **Agent Settings (Per-Agent Control)**
-```python
-Memory Agent:
-  - max_patterns: 1000
-  - max_solutions: 500
-  - learning_rate: 0.8
-  - cleanup_threshold: 7 days
-
-Issue Agent:
-  - auto_detect: true
-  - detection_sensitivity: 3 (1-5 scale)
-  - max_open_issues: 500
-  - issue_retention_days: 90
-  - pattern_threshold: 0.7
-
-Fixer Agent:
-  - auto_fix_enabled: true
-  - max_retry_attempts: 3
-  - fix_timeout_seconds: 120
-  - safety_checks_enabled: true
-  - learning_mode: adaptive|strict|aggressive
-  - parallel_fix_limit: 3
-```
-
-### **Performance Tuning**
-- Cache sizes
-- TTL configurations
-- Batch intervals
-- Parallel workers (1-4)
-- Event history limits
-- Garbage collection intervals
-
-### **Features Management**
-- Debug mode (per-agent or system-wide)
-- Event logging
-- Call tracing
-- Detailed error reporting
-- Feature toggles
-
-### **Backup & Restore**
-- Create settings backups
-- Restore from backup
-- List available backups
-- Timestamped backups
+The active backend configures agent behavior in code during startup. There is no
+runtime settings, debug-feature, or feature-toggle API exposed by
+`backend/server.py`.
 
 ---
 
@@ -258,8 +216,7 @@ Noahubai/
 │   ├── fixer_agent.py        # Fixing agent
 │   └── agent_metadata.py     # Agent info & config
 ├── backend/                   # API server
-│   ├── server.py             # FastAPI app
-│   └── settings_manager.py   # Settings management
+│   └── server.py             # FastAPI app
 ├── main.py                    # Entry point
 ├── setup.py                   # Python installer
 ├── setup.bat                  # Windows installer
