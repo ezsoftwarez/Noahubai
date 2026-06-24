@@ -167,12 +167,11 @@ Fixer Agent:
 - Event history limits
 - Garbage collection intervals
 
-### **Features Management**
+### **Diagnostics Management**
 - Debug mode (per-agent or system-wide)
 - Event logging
 - Call tracing
 - Detailed error reporting
-- Feature toggles
 
 ### **Backup & Restore**
 - Create settings backups
