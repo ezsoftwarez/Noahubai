@@ -256,39 +256,11 @@ Categories=Development;Utility;
         os.chmod(shell_script, 0o755)
         print(f"  ✓ Created run_noahubai.sh")
     
-    def create_config_files(self):
-        """Create configuration files"""
-        print("\n⚙️  Creating Configuration Files")
+    def create_install_info_file(self):
+        """Create installation metadata"""
+        print("\n⚙️  Creating Installation Metadata")
         print("=" * 50)
-        
-        # Create .env file
-        env_file = self.install_dir / ".env"
-        env_content = f"""# Noahubai Configuration
-# Generated: {datetime.now().isoformat()}
 
-# Server
-HOST=0.0.0.0
-PORT=8000
-DEBUG=false
-
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=noahubai.log
-
-# Agents
-AGENT_TIMEOUT=30
-MAX_RETRIES=3
-
-# Memory
-MEMORY_MAX_SIZE=10000
-MEMORY_CLEANUP_INTERVAL=3600
-"""
-        
-        with open(env_file, 'w') as f:
-            f.write(env_content)
-        
-        print(f"  ✓ Created .env configuration file")
-        
         # Create installation info
         install_info = {
             "version": "1.0.0",
@@ -304,7 +276,7 @@ MEMORY_CLEANUP_INTERVAL=3600
             json.dump(install_info, f, indent=2)
         
         print(f"  ✓ Created install_info.json")
-        print("\n✅ Configuration files created successfully")
+        print("\n✅ Installation metadata created successfully")
     
     def print_completion_summary(self):
         """Print installation completion summary"""
@@ -330,8 +302,7 @@ MEMORY_CLEANUP_INTERVAL=3600
         print(f"   - README: {self.install_dir / 'README.md'}")
         print(f"   - API Docs: http://localhost:8000/docs")
         
-        print("\n🔧 Configuration:")
-        print(f"   - Edit settings: {self.install_dir / '.env'}")
+        print("\n🔧 Installation Metadata:")
         print(f"   - Install info: {self.install_dir / 'install_info.json'}")
         
         print("\n📖 Next Steps:")
@@ -346,7 +317,7 @@ MEMORY_CLEANUP_INTERVAL=3600
         print("   ✓ Fixer Agent - Automatically fix problems")
         print("   ✓ Real-time WebSocket updates")
         print("   ✓ Comprehensive REST API")
-        print("   ✓ Advanced settings and configuration")
+        print("   ✓ Agent lifecycle and health monitoring")
         
         print("\n⚙️  System Information:")
         print(f"   Python: {sys.version.split()[0]}")
@@ -378,8 +349,8 @@ MEMORY_CLEANUP_INTERVAL=3600
             if not self.copy_application_files():
                 return False
             
-            # Step 5: Create configuration files
-            self.create_config_files()
+            # Step 5: Create installation metadata
+            self.create_install_info_file()
             
             # Step 6: Create shortcuts
             self.create_shortcuts()

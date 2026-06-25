@@ -100,19 +100,6 @@ if exist "%USERPROFILE%\Desktop\Noahubai.lnk" (
 )
 
 echo.
-echo ⚙️  Creating Configuration Files...
-(
-    echo # Noahubai Configuration
-    echo # Generated: %date% %time%
-    echo.
-    echo HOST=0.0.0.0
-    echo PORT=8000
-    echo DEBUG=false
-    echo LOG_LEVEL=INFO
-) > "%INSTALL_DIR%\.env"
-echo ✓ Created .env file
-
-echo.
 echo ════════════════════════════════════════════════════════════════════════════════
 echo ✅ NOAHUBAI INSTALLATION COMPLETED SUCCESSFULLY!
 echo ════════════════════════════════════════════════════════════════════════════════
