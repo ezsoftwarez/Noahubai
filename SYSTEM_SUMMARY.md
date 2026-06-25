@@ -56,7 +56,6 @@ A **complete, production-ready intelligent AI system** with:
 - **EventBus**: Pub/Sub system for decoupled communication
 - **StateManager**: Centralized state with issue tracking and memory
 - **AgentRegistry**: Manages agent lifecycle and discovery
-- **SettingsManager**: Advanced configuration system with backup/restore
 
 ### **API Layer**
 - **FastAPI Server** on port 8000
@@ -101,7 +100,6 @@ chmod +x setup.sh
 - ✅ Dependency installation (FastAPI, Uvicorn, Pydantic, etc.)
 - ✅ Application file copying
 - ✅ Desktop shortcuts creation
-- ✅ Configuration file generation
 - ✅ Installation info tracking
 
 ---
@@ -166,21 +164,6 @@ Fixer Agent:
 - Parallel workers (1-4)
 - Event history limits
 - Garbage collection intervals
-
-### **Features Management**
-- Debug mode (per-agent or system-wide)
-- Event logging
-- Call tracing
-- Detailed error reporting
-- Feature toggles
-
-### **Backup & Restore**
-- Create settings backups
-- Restore from backup
-- List available backups
-- Timestamped backups
-
----
 
 ## 🔌 API Hooks & Webhooks
 
@@ -258,8 +241,7 @@ Noahubai/
 │   ├── fixer_agent.py        # Fixing agent
 │   └── agent_metadata.py     # Agent info & config
 ├── backend/                   # API server
-│   ├── server.py             # FastAPI app
-│   └── settings_manager.py   # Settings management
+│   └── server.py             # FastAPI app
 ├── main.py                    # Entry point
 ├── setup.py                   # Python installer
 ├── setup.bat                  # Windows installer
@@ -364,19 +346,7 @@ curl http://localhost:8000/api/memory/growth
 
 ---
 
-## 🔐 Configuration Files
-
-### **.env** (Environment Variables)
-```env
-HOST=0.0.0.0
-PORT=8000
-DEBUG=false
-LOG_LEVEL=INFO
-AGENT_TIMEOUT=30
-MAX_RETRIES=3
-MEMORY_MAX_SIZE=10000
-MEMORY_CLEANUP_INTERVAL=3600
-```
+## 🔐 Installation Metadata
 
 ### **install_info.json** (Installation Tracking)
 ```json

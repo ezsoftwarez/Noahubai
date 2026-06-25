@@ -160,26 +160,6 @@ EOF
     echo -e "${GREEN}✅ Shortcuts created${NC}"
 }
 
-create_config() {
-    echo -e "\n${BLUE}⚙️  Creating Configuration Files${NC}"
-    
-    ENV_FILE="$INSTALL_DIR/.env"
-    cat > "$ENV_FILE" << EOF
-# Noahubai Configuration
-# Generated: $(date)
-
-HOST=0.0.0.0
-PORT=8000
-DEBUG=false
-LOG_LEVEL=INFO
-AGENT_TIMEOUT=30
-MAX_RETRIES=3
-EOF
-    
-    echo -e "  ${GREEN}✓${NC} Created .env file"
-    echo -e "${GREEN}✅ Configuration files created${NC}"
-}
-
 print_completion() {
     echo -e "\n${GREEN}════════════════════════════════════════════════════════════════════════════════"
     echo "✅ NOAHUBAI INSTALLATION COMPLETED SUCCESSFULLY!"
@@ -208,7 +188,6 @@ main() {
     install_dependencies
     copy_files
     create_shortcuts
-    create_config
     print_completion
     
     read -p "Start Noahubai now? (Y/n): " -r response

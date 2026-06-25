@@ -365,64 +365,15 @@ POST /api/fix/all
 
 ---
 
-## Configuration
+## Runtime Defaults
 
-### Environment Variables
+The server currently starts with code-level defaults in `main.py` and `backend/server.py`:
 
-Create `.env` file in installation directory:
+- Host: `0.0.0.0`
+- Port: `8000`
+- Log level: `info`
 
-```env
-# Server
-HOST=0.0.0.0
-PORT=8000
-DEBUG=false
-
-# Agents
-AGENT_TIMEOUT=30
-MAX_RETRIES=3
-
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=noahubai.log
-
-# Memory
-MEMORY_MAX_SIZE=10000
-MEMORY_CLEANUP_INTERVAL=3600
-```
-
-### Agent Settings
-
-Access advanced settings through API or settings manager.
-
-#### Memory Agent Settings
-```python
-{
-  "max_patterns": 1000,
-  "max_solutions": 500,
-  "learning_rate": 0.8,
-  "cleanup_threshold": 7
-}
-```
-
-#### Issue Agent Settings
-```python
-{
-  "auto_detect": true,
-  "detection_sensitivity": 3,
-  "max_open_issues": 500,
-  "issue_retention_days": 90
-}
-```
-
-#### Fixer Agent Settings
-```python
-{
-  "auto_fix_enabled": true,
-  "max_retry_attempts": 3,
-  "fix_timeout_seconds": 120,
-  "safety_checks_enabled": true
-}
-```
+There is no active `.env` loader or settings manager API in the runtime path.
 
 ---
 
@@ -488,46 +439,8 @@ GET /api/status
 ### Issue Detection Problems
 
 ```bash
-# Increase sensitivity
-POST /api/settings/issue_agent
-{"detection_sensitivity": 5}
-
 # Manual issue detection
 POST /api/issues/detect
-```
-
----
-
-## Performance Tuning
-
-### Memory Optimization
-
-```env
-MEMORY_MAX_SIZE=5000          # Smaller if running low on RAM
-MEMORY_CLEANUP_INTERVAL=1800  # More frequent cleanup
-```
-
-### Agent Performance
-
-```python
-# Parallel processing
-"parallel_workers": 4
-
-# Batch size
-"batch_size": 10
-
-# Timeouts
-"timeout_seconds": 60
-```
-
-### Database Optimization
-
-```python
-# State backup interval
-"state_backup_interval": 3600
-
-# Garbage collection
-"gc_interval": 1800
 ```
 
 ---
@@ -550,7 +463,7 @@ MEMORY_CLEANUP_INTERVAL=1800  # More frequent cleanup
 - Fixer Agent with automatic resolution
 - REST API with full documentation
 - WebSocket for real-time updates
-- Advanced settings and configuration
+- Agent lifecycle and health monitoring
 
 ---
 
