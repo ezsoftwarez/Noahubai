@@ -207,7 +207,7 @@ set PYTHON_EXE={venv_python}
 set MAIN_PY={main_py}
 
 REM Create shortcut (requires PowerShell)
-powershell -NoProfile -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Noahubai.lnk'); $Shortcut.TargetPath = '%PYTHON_EXE%'; $Shortcut.Arguments = '%MAIN_PY%'; $Shortcut.WorkingDirectory = '%SCRIPT_DIR%'; $Shortcut.IconLocation = '%SCRIPT_DIR%'; $Shortcut.Save()"
+powershell -NoProfile -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\\Desktop\\Noahubai.lnk'); $Shortcut.TargetPath = '%PYTHON_EXE%'; $Shortcut.Arguments = '%MAIN_PY%'; $Shortcut.WorkingDirectory = '%SCRIPT_DIR%'; $Shortcut.IconLocation = '%SCRIPT_DIR%'; $Shortcut.Save()"
 
 echo Shortcuts created successfully!
 pause
