@@ -269,7 +269,6 @@ Categories=Development;Utility;
 # Server
 HOST=0.0.0.0
 PORT=8000
-DEBUG=false
 
 # Logging
 LOG_LEVEL=INFO
