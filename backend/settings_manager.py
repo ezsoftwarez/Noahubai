@@ -130,7 +130,6 @@ class SettingsManager:
             "fixer_agent": {
                 "fix_strategy_timeout": await self._get_setting("fixer_agent", "fix_strategy_timeout", 120),
                 "parallel_fixes": await self._get_setting("fixer_agent", "parallel_fixes", 3),
-                "rollback_enabled": await self._get_setting("fixer_agent", "rollback_enabled", True),
             },
             "system": {
                 "event_bus_max_history": await self._get_setting("system", "event_bus_max_history", 10000),
@@ -155,40 +154,6 @@ class SettingsManager:
         
         return results
     
-    # ==================== Advanced Features ====================
-    
-    async def enable_feature(self, feature_name: str, agent_name: str = None) -> bool:
-        """
-        Enable an advanced feature
-        
-        Features: debug_mode, aggressive_fixing, pattern_learning, issue_prediction
-        """
-        features_key = f"features:enabled"
-        features = await self.state_manager.get_dict(features_key)
-        
-        feature_id = f"{agent_name}:{feature_name}" if agent_name else feature_name
-        features[feature_id] = True
-        
-        await self.state_manager.merge_dict(features_key, features)
-        logger.info(f"Enabled feature: {feature_id}")
-        return True
-    
-    async def disable_feature(self, feature_name: str, agent_name: str = None) -> bool:
-        """Disable an advanced feature"""
-        features_key = f"features:enabled"
-        features = await self.state_manager.get_dict(features_key)
-        
-        feature_id = f"{agent_name}:{feature_name}" if agent_name else feature_name
-        features[feature_id] = False
-        
-        await self.state_manager.merge_dict(features_key, features)
-        logger.info(f"Disabled feature: {feature_id}")
-        return True
-    
-    async def get_enabled_features(self) -> Dict[str, bool]:
-        """Get all enabled features"""
-        return await self.state_manager.get_dict("features:enabled")
-    
     # ==================== Logging & Debug ====================
     
     async def set_log_level(self, level: str, agent_name: str = None) -> bool:
@@ -204,19 +169,6 @@ class SettingsManager:
         logger.info(f"Set log level to {level}")
         return True
     
-    async def enable_debug_mode(self, agent_name: str = None) -> bool:
-        """Enable debug mode"""
-        return await self.set_log_level("DEBUG", agent_name)
-    
-    async def get_debug_config(self) -> Dict[str, Any]:
-        """Get debug configuration"""
-        return {
-            "debug_enabled": await self.state_manager.get("debug:enabled", False),
-            "log_events": await self.state_manager.get("debug:log_events", False),
-            "trace_calls": await self.state_manager.get("debug:trace_calls", False),
-            "detailed_errors": await self.state_manager.get("debug:detailed_errors", False),
-        }
-    
     # ==================== Persistence & Backup ====================
     
     async def create_settings_backup(self) -> Dict[str, Any]:
@@ -225,7 +177,6 @@ class SettingsManager:
             "timestamp": datetime.utcnow().isoformat(),
             "agents": {},
             "system": await self.get_system_settings(),
-            "features": await self.get_enabled_features(),
         }
         
         for agent in ["memory_agent", "issue_agent", "fixer_agent"]:
