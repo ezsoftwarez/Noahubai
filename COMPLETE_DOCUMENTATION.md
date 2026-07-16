@@ -375,7 +375,6 @@ Create `.env` file in installation directory:
 # Server
 HOST=0.0.0.0
 PORT=8000
-DEBUG=false
 
 # Agents
 AGENT_TIMEOUT=30
@@ -407,7 +406,6 @@ Access advanced settings through API or settings manager.
 #### Issue Agent Settings
 ```python
 {
-  "auto_detect": true,
   "detection_sensitivity": 3,
   "max_open_issues": 500,
   "issue_retention_days": 90
@@ -417,10 +415,8 @@ Access advanced settings through API or settings manager.
 #### Fixer Agent Settings
 ```python
 {
-  "auto_fix_enabled": true,
   "max_retry_attempts": 3,
-  "fix_timeout_seconds": 120,
-  "safety_checks_enabled": true
+  "fix_timeout_seconds": 120
 }
 ```
 
