@@ -144,17 +144,14 @@ Memory Agent:
   - cleanup_threshold: 7 days
 
 Issue Agent:
-  - auto_detect: true
   - detection_sensitivity: 3 (1-5 scale)
   - max_open_issues: 500
   - issue_retention_days: 90
   - pattern_threshold: 0.7
 
 Fixer Agent:
-  - auto_fix_enabled: true
   - max_retry_attempts: 3
   - fix_timeout_seconds: 120
-  - safety_checks_enabled: true
   - learning_mode: adaptive|strict|aggressive
   - parallel_fix_limit: 3
 ```
@@ -166,13 +163,6 @@ Fixer Agent:
 - Parallel workers (1-4)
 - Event history limits
 - Garbage collection intervals
-
-### **Features Management**
-- Debug mode (per-agent or system-wide)
-- Event logging
-- Call tracing
-- Detailed error reporting
-- Feature toggles
 
 ### **Backup & Restore**
 - Create settings backups
@@ -370,7 +360,6 @@ curl http://localhost:8000/api/memory/growth
 ```env
 HOST=0.0.0.0
 PORT=8000
-DEBUG=false
 LOG_LEVEL=INFO
 AGENT_TIMEOUT=30
 MAX_RETRIES=3
