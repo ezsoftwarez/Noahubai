@@ -277,7 +277,6 @@ ISSUE_AGENT_METADATA = AgentMetadata(
         parallel_workers=4
     ),
     settings={
-        "auto_detect": {"type": "boolean", "default": True, "description": "Enable automatic issue detection"},
         "detection_sensitivity": {"type": "integer", "default": 3, "min": 1, "max": 5, "description": "How sensitive to issues (1=strict, 5=loose)"},
         "max_open_issues": {"type": "integer", "default": 500, "min": 50, "max": 5000, "description": "Maximum open issues to track"},
         "issue_retention_days": {"type": "integer", "default": 90, "min": 7, "max": 365, "description": "Days to keep resolved issues"},
@@ -367,10 +366,8 @@ FIXER_AGENT_METADATA = AgentMetadata(
         parallel_workers=3
     ),
     settings={
-        "auto_fix_enabled": {"type": "boolean", "default": True, "description": "Enable automatic issue fixing"},
         "max_retry_attempts": {"type": "integer", "default": 3, "min": 1, "max": 10, "description": "Maximum fix attempts per issue"},
         "fix_timeout_seconds": {"type": "integer", "default": 120, "min": 10, "max": 600, "description": "Timeout for single fix operation"},
-        "safety_checks_enabled": {"type": "boolean", "default": True, "description": "Enable pre-fix safety validation"},
         "learning_mode": {"type": "string", "default": "adaptive", "enum": ["strict", "adaptive", "aggressive"], "description": "How aggressively to learn from fixes"},
         "parallel_fix_limit": {"type": "integer", "default": 3, "min": 1, "max": 10, "description": "Max issues to fix simultaneously"}
     }
