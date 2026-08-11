@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">REDRUM</string>
+    <string name="title_activity_main">REDRUM</string>
+    <string name="package_name">ai.noahubai.redrum</string>
+    <string name="custom_url_scheme">ai.noahubai.redrum</string>
+</resources>

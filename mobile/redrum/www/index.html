@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>REDRUM</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Onboarding / server connect screen -->
+  <div class="onboard hidden" id="onboard">
+    <div class="onboard-logo">R</div>
+    <h1>REDRUM</h1>
+    <p class="tag">Noahubai AI Hub &middot; Remote Control</p>
+
+    <div class="field">
+      <label for="serverUrl">Szerver URL</label>
+      <input id="serverUrl" type="url" inputmode="url" autocapitalize="none" autocorrect="off"
+             spellcheck="false" placeholder="https://szerver.pelda.hu:8000" />
+      <div class="hint">A Noahubai backend (FastAPI) elérhető címe. Ez az alkalmazásban bármikor megváltoztatható a Beállításokban.</div>
+    </div>
+
+    <button class="btn primary" id="onboardConnect">Csatlakozás</button>
+    <div class="status-line" id="onboardStatus"></div>
+  </div>
+
+  <!-- App shell -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">R</div>
+      <div class="brand-name">REDRUM</div>
+    </div>
+    <div class="status-dot" id="topStatusDot" title="kapcsolat"></div>
+  </div>
+
+  <div class="views">
+
+    <!-- Dashboard -->
+    <section class="view active" id="view-dashboard">
+      <h1 class="page-title">Áttekintés</h1>
+      <p class="page-sub">Rendszer állapot és élő metrikák</p>
+
+      <div class="refresh-row">
+        <span class="pill neutral" id="dashConnPill">kapcsolódik&hellip;</span>
+        <span class="ts" id="dashTs"></span>
+      </div>
+
+      <div class="stat-grid" id="dashStats">
+        <div class="stat-card"><div class="val">&mdash;</div><div class="lbl">Aktív ügynökök</div></div>
+        <div class="stat-card accent"><div class="val">&mdash;</div><div class="lbl">Nyílt hibák</div></div>
+        <div class="stat-card"><div class="val">&mdash;</div><div class="lbl">Tanult minták</div></div>
+        <div class="stat-card"><div class="val">&mdash;</div><div class="lbl">Rendszer</div></div>
+      </div>
+
+      <div class="section-label">Ügynökök</div>
+      <div id="dashAgentList"><div class="empty"><div class="icon">&#9679;</div><div class="msg">Csatlakozás a szerverhez&hellip;</div></div></div>
+    </section>
+
+    <!-- Agents -->
+    <section class="view" id="view-agents">
+      <h1 class="page-title">Ügynökök</h1>
+      <p class="page-sub">Memory &middot; Issue &middot; Fixer és további modulok</p>
+      <div id="agentsList"><div class="empty"><div class="icon">&#8987;</div><div class="msg">Betöltés&hellip;</div></div></div>
+    </section>
+
+    <!-- Issues -->
+    <section class="view" id="view-issues">
+      <h1 class="page-title">Hibák</h1>
+      <p class="page-sub">Automatikusan észlelt és nyomon követett problémák</p>
+      <div id="issuesList"><div class="empty"><div class="icon">&#8987;</div><div class="msg">Betöltés&hellip;</div></div></div>
+    </section>
+
+    <!-- Settings -->
+    <section class="view" id="view-settings">
+      <h1 class="page-title">Beállítások</h1>
+      <p class="page-sub">Szerver kapcsolat és alkalmazás információ</p>
+
+      <div class="field">
+        <label for="settingsUrl">Szerver URL</label>
+        <input id="settingsUrl" type="url" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" />
+      </div>
+      <button class="btn primary" id="settingsSave">Mentés és újracsatlakozás</button>
+      <div class="status-line" id="settingsStatus"></div>
+
+      <div class="section-label">Alkalmazás</div>
+      <div class="card">
+        <div class="row-sub">Verzió: <span id="appVersion">1.0.0</span></div>
+        <div class="row-sub">Csomag: ai.noahubai.redrum</div>
+        <div class="row-sub">Build: Capacitor / Android</div>
+      </div>
+
+      <button class="btn ghost" id="settingsDisconnect" style="margin-top:14px;color:var(--err);">Kapcsolat törlése</button>
+    </section>
+
+  </div>
+
+  <div class="tabbar">
+    <button class="tab active" data-view="dashboard"><span class="ic">&#9673;</span>Áttekintés</button>
+    <button class="tab" data-view="agents"><span class="ic">&#9881;</span>Ügynökök</button>
+    <button class="tab" data-view="issues"><span class="ic">&#9888;</span>Hibák</button>
+    <button class="tab" data-view="settings"><span class="ic">&#9776;</span>Beállítás</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
