@@ -1,0 +1,23 @@
+{
+  "appId": "ai.noahubai.redrum",
+  "appName": "REDRUM",
+  "webDir": "www",
+  "backgroundColor": "#0a0a0f",
+  "android": {
+    "backgroundColor": "#0a0a0f",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 900,
+      "backgroundColor": "#0a0a0f",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0a0a0f"
+    }
+  }
+}

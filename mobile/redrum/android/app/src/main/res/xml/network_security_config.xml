@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  REDRUM connects to a user-supplied Noahubai backend URL (see Settings screen),
+  which is very often a self-hosted server or home/LAN box without a TLS
+  certificate. Cleartext (http://) traffic is therefore allowed for all domains
+  so that configuring a plain-http server works out of the box. HTTPS is still
+  used whenever the user enters an https:// URL.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
