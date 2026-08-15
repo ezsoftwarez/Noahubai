@@ -281,6 +281,7 @@
       await testConnection(url);
       serverUrl = url;
       await setStoredUrl(url);
+      $('#settingsUrl').value = url;
       if (statusEl) statusEl.textContent = '';
       showApp();
       startPolling();
