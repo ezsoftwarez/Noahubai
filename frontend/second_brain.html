@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Second Brain</title>
+<style>
+  :root{
+    --bg:#0a0d16; --panel:#111626; --panel2:#0d1220; --border:#232c45;
+    --txt:#e9edf9; --muted:#8b97b8; --accent:#6c8bff; --accent2:#9d7bff;
+    --good:#45d483; --warn:#ffc24a; --bad:#ff5d7a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex;flex-direction:column;overflow:hidden}
+
+  /* ---------- top bar ---------- */
+  header{display:flex;align-items:center;gap:12px;padding:10px 16px;
+    border-bottom:1px solid var(--border);background:var(--panel2);flex:0 0 auto}
+  .logo{font-weight:700;letter-spacing:.3px;white-space:nowrap}
+  .logo small{color:var(--muted);font-weight:400;margin-left:6px}
+  .grow{flex:1}
+  select,.btn{background:var(--panel);color:var(--txt);border:1px solid var(--border);
+    border-radius:9px;padding:7px 11px;font:inherit;font-size:13px;cursor:pointer}
+  .btn:hover,select:hover{border-color:var(--accent)}
+  .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.solid:hover{filter:brightness(1.1)}
+  .btn:disabled{opacity:.55;cursor:default}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:0 0 auto}
+  .dot.on{background:var(--good);box-shadow:0 0 7px var(--good)}
+  .dot.off{background:#39425e}
+
+  /* ---------- warning banner ---------- */
+  #warn{display:none;gap:10px;align-items:center;padding:10px 16px;
+    background:rgba(255,194,74,.1);border-bottom:1px solid rgba(255,194,74,.3);
+    font-size:13px;color:#ffdb8a}
+  #warn.on{display:flex}
+
+  /* ---------- chat ---------- */
+  main{flex:1;display:flex;flex-direction:column;min-height:0}
+  #msgs{flex:1;overflow-y:auto;padding:22px 16px;display:flex;flex-direction:column;gap:16px}
+  .msg{display:flex;gap:11px;max-width:860px;width:100%;margin:0 auto}
+  .msg.me{flex-direction:row-reverse}
+  .av{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+    font-size:15px;flex:0 0 auto;background:rgba(108,139,255,.16)}
+  .msg.me .av{background:rgba(157,123,255,.16)}
+  .bubble{background:var(--panel);border:1px solid var(--border);border-radius:13px;
+    padding:12px 15px;min-width:0;overflow-wrap:anywhere}
+  .msg.me .bubble{background:rgba(157,123,255,.1);border-color:rgba(157,123,255,.3)}
+  .bubble p{margin:0 0 9px}
+  .bubble p:last-child{margin:0}
+  .bubble pre{background:#060912;border:1px solid var(--border);border-radius:9px;
+    padding:11px;overflow-x:auto;margin:9px 0;font-size:12.5px;
+    font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+  .bubble code{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+    font-size:.9em;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px}
+  .bubble pre code{background:none;padding:0;font-size:inherit}
+  .bubble ul{margin:7px 0;padding-left:20px}
+  .bubble a{color:var(--accent)}
+  .tag{font-size:10.5px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;
+    margin-top:7px;display:block}
+
+  /* ---------- composer ---------- */
+  footer{flex:0 0 auto;border-top:1px solid var(--border);background:var(--panel2);
+    padding:12px 16px}
+  .composer{max-width:860px;margin:auto;display:flex;gap:9px;align-items:flex-end}
+  textarea{flex:1;resize:none;background:var(--panel);color:var(--txt);
+    border:1px solid var(--border);border-radius:11px;padding:11px 13px;font:inherit;
+    max-height:190px;outline:0}
+  textarea:focus{border-color:var(--accent)}
+  .hint{max-width:860px;margin:7px auto 0;font-size:11.5px;color:var(--muted);
+    display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+  /* ---------- overlays ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(4,6,12,.74);backdrop-filter:blur(4px);
+    display:none;place-items:center;padding:16px;z-index:50}
+  .overlay.on{display:grid}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:16px;
+    padding:22px;width:min(640px,100%);max-height:88vh;overflow-y:auto}
+  .modal h2{margin:0 0 4px;font-size:19px}
+  .sub{margin:0 0 16px;color:var(--muted);font-size:13px}
+  .x{float:right;background:none;border:0;color:var(--muted);font-size:24px;
+    cursor:pointer;line-height:1;padding:0 2px}
+  .x:hover{color:var(--txt)}
+  label.fld{display:block;margin-bottom:11px;font-size:12.5px;color:var(--muted)}
+  label.fld input{width:100%;margin-top:5px;background:var(--panel2);color:var(--txt);
+    border:1px solid var(--border);border-radius:9px;padding:9px 11px;font:inherit;outline:0}
+  label.fld input:focus{border-color:var(--accent)}
+  .kstate{float:right;font-size:11px}
+
+  /* doctor */
+  .dscore{display:flex;align-items:center;gap:14px;margin:4px 0 16px}
+  .dring{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;
+    font-weight:700;font-size:17px;flex:0 0 auto}
+  .dchk{display:flex;gap:11px;align-items:flex-start;padding:11px 12px;border-radius:11px;
+    border:1px solid var(--border);background:rgba(255,255,255,.025);margin-bottom:8px}
+  .dchk b{font-size:13px}
+  .dchk p{margin:3px 0 0;font-size:11.5px;color:var(--muted);line-height:1.45}
+  .dfix{margin-top:6px;font-size:11.5px;color:var(--warn)}
+  #dLog{display:none;margin-top:12px;max-height:210px;overflow:auto;background:#060912;
+    border:1px solid var(--border);border-radius:10px;padding:11px;white-space:pre-wrap;
+    font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:#c3cdf0}
+  .provrow{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:13px}
+
+  #toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%) translateY(14px);
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:9px 16px;font-size:13px;opacity:0;pointer-events:none;transition:.22s;z-index:60}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:620px){
+    header{flex-wrap:wrap;gap:8px}
+    .logo small{display:none}
+    #msgs{padding:16px 12px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🧠 Second Brain <small>ULTRA core</small></div>
+  <span class="grow"></span>
+  <select id="prov" title="Which model answers"></select>
+  <select id="engine" title="Offline reasoning engine">
+    <option value="off">Engine: off</option>
+    <option value="fable5">⚡ Fable 5 — fast</option>
+    <option value="fable6">⚡ Fable 6 — deep</option>
+  </select>
+  <button class="btn" id="btnDoc" title="Setup Doctor — what works, what's missing">🩺</button>
+  <button class="btn" id="btnKeys" title="API keys">🔑</button>
+  <button class="btn" id="btnSave" title="Save this session">💾</button>
+  <button class="btn" id="btnLoad" title="Load a session">📂</button>
+</header>
+
+<div id="warn">
+  <span>⚠️</span>
+  <span><b>No model connected.</b> Scaffolding, memory and code-running work;
+    questions will be answered honestly as unanswerable until you connect one.</span>
+  <span class="grow"></span>
+  <button class="btn" id="warnFix">Fix this</button>
+</div>
+
+<main>
+  <div id="msgs"></div>
+</main>
+
+<footer>
+  <div class="composer">
+    <textarea id="ta" rows="1" placeholder="Ask anything, or say “make an html snake game”…"></textarea>
+    <button class="btn solid" id="send">Send</button>
+  </div>
+  <div class="hint">
+    <span id="status"><span class="dot off"></span> checking…</span>
+    <span>Enter to send · Shift+Enter for a new line</span>
+  </div>
+</footer>
+
+<!-- SETUP DOCTOR -->
+<div class="overlay" id="docOverlay">
+  <div class="modal">
+    <button class="x" id="docClose">×</button>
+    <h2>🩺 Setup Doctor</h2>
+    <p class="sub" id="docHead">Checking…</p>
+    <div class="dscore" id="docScore"></div>
+    <div id="docChecks"></div>
+    <div id="docActions" style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px"></div>
+    <pre id="dLog"></pre>
+  </div>
+</div>
+
+<!-- KEYS -->
+<div class="overlay" id="keyOverlay">
+  <div class="modal">
+    <button class="x" id="keyClose">×</button>
+    <h2>🔑 Provider keys</h2>
+    <p class="sub">Stored on this machine in <code>data/keys.json</code> — never sent anywhere
+      but the provider you are calling. Leave a field blank to keep what is saved.</p>
+    <div id="keyFields"></div>
+    <button class="btn solid" id="keySave">Save keys</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const msgs = $('#msgs');
+const state = { providers: [], connected: false, engine: 'off', provider: 'free', busy: false };
+
+/* ---------------- toast ---------------- */
+let toastT;
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'), 2600); }
+
+/* ---------------- tiny markdown ----------------
+   Escape first, then build up. Order matters: fenced code is pulled out before
+   anything else so markdown inside a snippet is left alone. */
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function md(src){
+  const blocks = [];
+  let s = esc(String(src ?? ''));
+  s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    blocks.push(`<pre><code>${code.replace(/\n$/,'')}</code></pre>`);
+    return `\u0000${blocks.length-1}\u0000`;
+  });
+  s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>');
+  s = s.replace(/(^|[\s(])\*([^*\n]+)\*/g, '$1<i>$2</i>');
+  s = s.replace(/_([^_\n]+)_/g, '<i>$1</i>');
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+                '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // group runs of "- " lines into a single list
+  s = s.replace(/(?:^|\n)((?:- .*(?:\n|$))+)/g, (_, run) =>
+    '\n<ul>' + run.trim().split('\n').map(l => `<li>${l.replace(/^- /,'')}</li>`).join('') + '</ul>');
+  s = s.split(/\n{2,}/).map(p =>
+    /^\s*(<ul|<pre|\u0000)/.test(p) ? p : `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+  return s.replace(/\u0000(\d+)\u0000/g, (_, i) => blocks[+i]);
+}
+
+/* ---------------- messages ---------------- */
+function addMsg(role, text, tag){
+  const d = document.createElement('div');
+  d.className = 'msg ' + role;
+  d.innerHTML = `<div class="av">${role==='me'?'🙂':'🧠'}</div>`
+    + `<div class="bubble">${md(text)}${tag?`<span class="tag">${esc(tag)}</span>`:''}</div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+  return d;
+}
+
+/* ---------------- composer ---------------- */
+const ta = $('#ta');
+function grow(){ ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight,190)+'px'; }
+ta.addEventListener('input', grow);
+ta.addEventListener('keydown', e => {
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+});
+$('#send').onclick = send;
+
+async function send(){
+  const text = ta.value.trim();
+  if(!text || state.busy) return;
+  ta.value=''; grow();
+  addMsg('me', text);
+  state.busy = true; $('#send').disabled = true;
+  const pending = addMsg('ai', '_thinking…_',
+    state.engine==='off' ? null : state.engine + ' · multi-pass');
+  try{
+    const r = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message:text, provider: state.provider })
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    pending.querySelector('.bubble').innerHTML =
+      md(j.reply) + `<span class="tag">${esc(j.model||'')}</span>`;
+  }catch(e){
+    pending.querySelector('.bubble').innerHTML =
+      md(`**The backend did not answer.** ${e.message}\n\nIs the server still running?`);
+  }finally{
+    state.busy=false; $('#send').disabled=false;
+    msgs.scrollTop = msgs.scrollHeight;
+    ta.focus();
+  }
+}
+
+/* ---------------- providers + status ---------------- */
+async function loadProviders(){
+  try{
+    const j = await (await fetch('/api/providers')).json();
+    state.providers = j.providers;
+    state.connected = j.providers.some(p => p.connected);
+    const sel = $('#prov');
+    sel.innerHTML = j.providers.map(p =>
+      `<option value="${p.id}">${p.connected?'🟢':'⚪'} ${esc(p.label)}</option>`).join('');
+    sel.value = state.provider;
+    const free = j.providers.find(p => p.id==='free');
+    $('#status').innerHTML =
+      `<span class="dot ${state.connected?'on':'off'}"></span> ` +
+      (free && free.connected ? 'offline brain ready'
+       : state.connected ? 'cloud model connected' : 'no model connected');
+    $('#warn').classList.toggle('on', !state.connected);
+  }catch{
+    $('#status').innerHTML = '<span class="dot off"></span> backend unreachable';
+  }
+}
+$('#prov').onchange = e => { state.provider = e.target.value; };
+
+$('#engine').onchange = async e => {
+  state.engine = e.target.value;
+  await fetch('/api/settings', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ engine: state.engine }) });
+  toast(state.engine==='off' ? 'Engine off' : '⚡ ' + state.engine + ' on');
+};
+
+/* ---------------- Setup Doctor ---------------- */
+function openDoctor(){ $('#docOverlay').classList.add('on'); runDoctor(); }
+$('#btnDoc').onclick = openDoctor;
+$('#warnFix').onclick = openDoctor;
+$('#docClose').onclick = () => $('#docOverlay').classList.remove('on');
+$('#docOverlay').onclick = e => { if(e.target.id==='docOverlay') $('#docOverlay').classList.remove('on'); };
+
+async function runDoctor(){
+  $('#docHead').textContent='Checking…'; $('#docChecks').innerHTML='';
+  $('#docActions').innerHTML=''; $('#dLog').style.display='none';
+  let d;
+  try{ d = await (await fetch('/api/ultra/doctor')).json(); }
+  catch(e){ $('#docHead').textContent = 'Cannot reach the backend: '+e.message; return; }
+
+  $('#docHead').textContent = d.headline;
+  const col = d.score>=85 ? 'var(--good)' : d.score>=55 ? 'var(--warn)' : 'var(--bad)';
+  const pass = d.checks.filter(c=>c.ok).length;
+  $('#docScore').innerHTML =
+    `<div class="dring" style="border:3px solid ${col};color:${col}">${d.score}</div>
+     <div style="font-size:12.5px;color:var(--muted)">System readiness<br>
+       <b style="color:var(--txt)">${pass}/${d.checks.length} checks passing</b></div>`;
+  $('#docChecks').innerHTML = d.checks.map(c => `<div class="dchk">
+      <span>${c.ok?'✅':(c.severity==='critical'?'🔴':'🟡')}</span>
+      <div style="flex:1"><b>${esc(c.name)}</b><p>${esc(c.detail)}</p>
+      ${c.fix?`<div class="dfix">↳ ${esc(c.fix)}</div>`:''}</div></div>`).join('');
+
+  const acts = [];
+  if(d.ollama_installed && !d.installed_models.length)
+    acts.push('<button class="btn solid" id="dInstall">⬇ Install the 3 recommended models</button>');
+  if(!d.ollama_installed)
+    acts.push('<button class="btn solid" id="dGet">↗ Get Ollama (free, offline)</button>');
+  acts.push('<button class="btn" id="dKeys">🔑 Add a provider key</button>');
+  acts.push('<button class="btn" id="dRe">↻ Re-check</button>');
+  $('#docActions').innerHTML = acts.join('');
+
+  const ins = $('#dInstall');
+  if(ins) ins.onclick = () => installModels(d.recommended.map(r=>r.model));
+  const get = $('#dGet');
+  if(get) get.onclick = () => window.open('https://ollama.com','_blank','noopener');
+  $('#dKeys').onclick = () => { $('#docOverlay').classList.remove('on'); openKeys(); };
+  $('#dRe').onclick = runDoctor;
+}
+
+async function installModels(models){
+  const log = $('#dLog');
+  log.style.display='block'; log.textContent='Starting…\n';
+  const btn = $('#dInstall');
+  if(btn){ btn.disabled=true; btn.textContent='⬇ Installing…'; }
+  try{
+    const r = await fetch('/api/ultra/install', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ models })
+    });
+    const rd = r.body.getReader(), dec = new TextDecoder();
+    let buf='';
+    for(;;){
+      const { value, done } = await rd.read();
+      if(done) break;
+      buf += dec.decode(value, { stream:true });
+      let i;
+      while((i = buf.indexOf('\n\n')) >= 0){
+        const line = buf.slice(0,i); buf = buf.slice(i+2);
+        if(!line.startsWith('data: ')) continue;
+        let j; try{ j = JSON.parse(line.slice(6)); }catch{ continue; }
+        if(j.error)  log.textContent += '✗ '+j.error+'\n';
+        if(j.status) log.textContent += `[${j.model}] ${j.status}\n`;
+        if(j.line)   log.textContent += '  '+j.line+'\n';
+        if(j.done){
+          log.textContent += `\n✅ Ready: ${(j.models||[]).join(', ')}\n`;
+          toast('🖥 Offline brain ready'); loadProviders(); runDoctor();
+        }
+        log.scrollTop = log.scrollHeight;
+      }
+    }
+  }catch(e){ log.textContent += '✗ '+e.message+'\n'; }
+  if(btn){ btn.disabled=false; btn.textContent='⬇ Install the 3 recommended models'; }
+}
+
+/* ---------------- keys ---------------- */
+function openKeys(){ $('#keyOverlay').classList.add('on'); loadKeyFields(); }
+$('#btnKeys').onclick = openKeys;
+$('#keyClose').onclick = () => $('#keyOverlay').classList.remove('on');
+$('#keyOverlay').onclick = e => { if(e.target.id==='keyOverlay') $('#keyOverlay').classList.remove('on'); };
+
+async function loadKeyFields(){
+  let cfg = {};
+  try{ cfg = (await (await fetch('/api/settings/keys')).json()).configured || {}; }catch{}
+  $('#keyFields').innerHTML = state.providers.filter(p => !p.local).map(p =>
+    `<label class="fld">${esc(p.label)}
+       <span class="kstate" style="color:${cfg[p.id]?'var(--good)':'var(--muted)'}">
+         ${cfg[p.id]?'saved':'not set'}</span>
+       <input type="password" data-p="${p.id}" placeholder="${cfg[p.id]?'••••••••  (saved)':'paste key'}">
+     </label>`).join('');
+}
+$('#keySave').onclick = async () => {
+  const keys = {};
+  document.querySelectorAll('#keyFields input').forEach(i => {
+    if(i.value.trim()) keys[i.dataset.p] = i.value.trim();
+  });
+  if(!Object.keys(keys).length){ toast('Nothing to save'); return; }
+  await fetch('/api/settings/keys', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ keys }) });
+  toast('🔑 Saved'); $('#keyOverlay').classList.remove('on'); loadProviders();
+};
+
+/* ---------------- sessions ---------------- */
+function collect(){
+  return [...msgs.querySelectorAll('.msg')].map(m => ({
+    role: m.classList.contains('me') ? 'me' : 'ai',
+    text: m.querySelector('.bubble').innerText.trim()
+  })).filter(m => m.text);
+}
+$('#btnSave').onclick = async () => {
+  const m = collect();
+  if(!m.length){ toast('Nothing to save yet'); return; }
+  const name = prompt('Name this session:', (m.find(x=>x.role==='me')||{}).text?.slice(0,40) || 'Session');
+  if(name === null) return;
+  try{
+    const j = await (await fetch('/api/ultra/sessions', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, messages: m })
+    })).json();
+    toast(`💾 Saved · ${j.total} session(s)`);
+  }catch(e){ toast('✗ '+e.message); }
+};
+$('#btnLoad').onclick = async () => {
+  let list;
+  try{ list = (await (await fetch('/api/ultra/sessions')).json()).sessions; }
+  catch(e){ toast('✗ '+e.message); return; }
+  if(!list.length){ toast('No saved sessions yet'); return; }
+  const pick = prompt('Load which session?\n\n' +
+    list.map((s,i)=>`${i+1}. ${s.name}  (${s.count} msgs · ${s.ts})`).join('\n') +
+    '\n\nEnter a number:');
+  const idx = parseInt(pick,10) - 1;
+  if(!list[idx]) return;
+  const full = await (await fetch('/api/ultra/sessions/'+list[idx].id)).json();
+  if(!full.ok){ toast('✗ not found'); return; }
+  msgs.innerHTML='';
+  full.session.messages.forEach(m => addMsg(m.role==='me'?'me':'ai', m.text));
+  toast('📂 '+full.session.name);
+};
+
+/* ---------------- keyboard ---------------- */
+addEventListener('keydown', e => {
+  if(e.key === 'Escape') document.querySelectorAll('.overlay.on')
+    .forEach(o => o.classList.remove('on'));
+});
+
+/* ---------------- boot ---------------- */
+(async function boot(){
+  try{
+    const s = (await (await fetch('/api/settings')).json()).settings || {};
+    state.engine = s.engine || 'off';
+    $('#engine').value = state.engine;
+  }catch{}
+  await loadProviders();
+  addMsg('ai',
+    "**Second Brain — ULTRA core.**\n\n" +
+    "This is the honest build: it answers what you actually asked, and when it " +
+    "has nothing to reason with it says so instead of inventing an answer.\n\n" +
+    "- Press 🩺 for a straight diagnosis of what is wired up and what is missing.\n" +
+    "- Pick **⚡ Fable 6** for the five-pass engine that critiques its own draft " +
+    "before you see it. Fully offline.\n" +
+    "- With no model at all, try *“make an html snake game”* — you get real, " +
+    "runnable code right now.",
+    'ready');
+  ta.focus();
+  setInterval(loadProviders, 30000);
+})();
+</script>
+</body>
+</html>

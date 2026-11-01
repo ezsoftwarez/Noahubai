@@ -22,7 +22,9 @@ from agents.issue_agent import IssueAgent
 from agents.fixer_agent import FixerAgent
 
 logger = logging.getLogger(__name__)
-FRONTEND_FILE = Path(__file__).resolve().parent.parent / "frontend" / "windows7_shell.html"
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+FRONTEND_FILE = FRONTEND_DIR / "windows7_shell.html"
+BRAIN_FILE = FRONTEND_DIR / "second_brain.html"
 
 # Global instances
 event_bus: EventBus = None
@@ -110,6 +112,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ==================== Second Brain routers ====================
+# Core chat, honest provider status, settings, memory
+from backend.brain_api import router as brain_router
+app.include_router(brain_router)
+
+# Fable Engine: offline Fable 5 / Fable 6 reasoning on local models
+from backend.fable_engine import router as fable_router
+app.include_router(fable_router)
+
+# ULTRA: setup doctor, one-click model install, sessions
+from backend.ultra import router as ultra_router
+app.include_router(ultra_router)
 
 
 # ==================== Event Broadcasting ====================
@@ -450,7 +465,13 @@ async def general_exception_handler(request, exc):
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Serve the Windows 7 style Noahubai shell."""
+    """Serve the Second Brain — the unified chat app."""
+    return BRAIN_FILE.read_text(encoding="utf-8")
+
+
+@app.get("/classic", response_class=HTMLResponse)
+async def classic():
+    """Serve the original Windows 7 style Noahubai shell."""
     return FRONTEND_FILE.read_text(encoding="utf-8")
 
 
